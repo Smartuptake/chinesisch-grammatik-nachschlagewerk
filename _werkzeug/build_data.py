@@ -89,6 +89,19 @@ def is_formel(t):
     return not t.endswith(('.', '!')) or t.count('+') >= 2
 
 
+# --------------------------------------------------------------------------
+# Titel, die im Skript selbst nichts aussagen
+# Kapitel 48 heisst dort nur „Die Strukturen fuer:" — im Inhaltsverzeichnis
+# steht es damit ohne erkennbaren Gegenstand da. Stefan hat den Titel auf die
+# Strukturformeln gesetzt, um die es in dem Kapitel geht. Aendert sich das
+# Skript, bleibt der Titel dadurch erhalten.
+# --------------------------------------------------------------------------
+TITEL_ERSATZ = {
+    48: 'S + gěi + mǒurén + dǎ (yī ge) diànhuà / '
+        'S + gěi + mǒurén + mǎi + Nomen / usw.',
+}
+
+
 def fix_titel(t):
     """Nur ein alleinstehendes Schlussanfuehrungszeichen entfernen."""
     t = t.strip()
@@ -118,7 +131,9 @@ kapitel = []
 for k in range(len(starts) - 1):
     s, e = starts[k], starts[k + 1]
     toc_titel, seite = TOC.get(k + 1, ('', 0))
-    titel = fix_titel(clean(blocks[s].get('text', ''))) or toc_titel
+    titel = (TITEL_ERSATZ.get(k + 1)
+             or fix_titel(clean(blocks[s].get('text', '')))
+             or toc_titel)
     hsk, lernjahr = '', ''
     abschnitte, cur = [], None
 

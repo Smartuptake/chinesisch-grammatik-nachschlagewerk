@@ -64,7 +64,7 @@ window.MM_STICHWORTE = {
   45: 'vorschlag aufforderung vermutung satzschlusspartikel ba wollen wir',
   46: 'zwei objekte doppelobjekt dativ geben schenken beibringen fragen gei song jiao wen jemandem etwas',
   47: 'modalverb können müssen wollen dürfen sollen möchten hui neng keyi yao xiang yinggai bixu dei',
-  48: 'strukturformel tätigkeit strukturen für alltagshandlungen',
+  48: 'gei mouren strukturformel strukturen für tätigkeiten alltagshandlungen jemanden anrufen telefonieren zurückrufen dianhua sms schreiben duanxin fotografieren zhaopian jemandem etwas kaufen mai zeigen vorstellen jieshao erklären',
   49: 'einige ein paar mehrere etwas yixie jige unbestimmte menge',
   50: 'reihenfolge abfolge zuerst dann danach anschliessend xian zai ranhou yihou nacheinander handlungen',
   51: 'aufzählung erstens zweitens drittens diyi dier disan punkte nennen',

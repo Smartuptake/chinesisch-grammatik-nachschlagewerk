@@ -299,9 +299,11 @@ function markieren(text, begriffe) {
   return out;
 }
 
-/* „HSK 3.0: HSK 1 (一-14) · HSK 3 (三-05)" → „HSK 1–3" */
+/* „HSK 3.0: HSK 1 (一-14) · HSK 3 (三-05)" → „HSK 1–3"
+   Das vorangestellte „HSK 3.0:" nennt die Fassung des Rahmenwerks, nicht
+   eine Stufe — es muss weg, bevor gezaehlt wird. */
 function hskKurz(hsk) {
-  const stufen = (hsk.match(/HSK\s*([1-9])/g) || [])
+  const stufen = (hsk.replace(/^HSK\s*3\.0\s*:/, '').match(/HSK\s*([1-9])/g) || [])
     .map(s => parseInt(s.replace(/\D/g, ''), 10))
     .filter(n => n >= 1 && n <= 9);
   const uniq = Array.from(new Set(stufen)).sort((a, b) => a - b);
