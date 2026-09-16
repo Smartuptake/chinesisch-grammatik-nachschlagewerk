@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grammatikstrukturen Chinesisch · Mandarin Maverick</title>
+<meta name="description" content="Interaktives Nachschlagewerk zur chinesischen Grammatik für die Jahrgangsstufen 10 bis 12 — 104 Kapitel, durchsuchbar auf Pinyin und auf Deutsch.">
+<meta name="author" content="Stefan Happel · Mandarin Maverick – Fast Track Chinese">
+<meta name="color-scheme" content="light">
+
+<!--
+  Mandarin Maverick – Fast Track Chinese
+  Grammatikstrukturen Chinesisch · Jahrgangsstufen 10 – 12
+  Nachschlagewerk zum Grammatikskript, 104 Kapitel.
+
+  BEDIENUNG
+    oben tippen          sucht, waehrend man schreibt
+    Eingabetaste         springt in das beste Kapitel
+    /  oder  s           springt ins Suchfeld
+    i  oder  Esc         zurueck zum Inhaltsverzeichnis
+
+  WAS DIE SUCHE VERSTEHT
+    ein Wort auf Pinyin, mit oder ohne Toene    ba · bǎ · yinwei
+    ein Wort auf Deutsch                        Vergangenheit · obwohl
+    einen ganzen Satz, deutsch oder Pinyin      Wǒ bǎ shū fàng zài zhuōzi shàng.
+    eine Kapitelnummer                          69
+
+  AUFBAU
+    index.html     diese Seite, nur das Geruest
+    theme.css      das Gestaltungssystem nach MM-Designhandbuch v1.4
+    daten.js       die 104 Kapitel, erzeugt aus dem Skript — nicht von Hand aendern
+    stichworte.js  deutsche Suchbegriffe je Kapitel — hier darf ergaenzt werden
+    app.js         Suche, Wegfindung, Darstellung
+
+  Die Seite laeuft ohne Server: index.html im Browser oeffnen genuegt.
+  Deshalb liegen die Daten als JavaScript-Datei vor und nicht als JSON —
+  eine JSON-Datei duerfte der Browser von der Festplatte nicht nachladen.
+-->
+
+<link rel="icon" href="assets/logo/mm-logo-symbol-color.png">
+<link rel="apple-touch-icon" href="assets/logo/mm-logo-symbol-color.png">
+<link rel="stylesheet" href="theme.css">
+</head>
+
+<body>
+
+<a class="mm-nur-sr" href="#mm-app">Zum Inhalt springen</a>
+
+<header class="mm-kopf">
+  <div class="mm-kopf-innen">
+
+    <button class="mm-marke" data-heim="1" type="button"
+            title="Zum Inhaltsverzeichnis">
+      <img src="assets/logo/mm-logo-full-color.png"
+           alt="Mandarin Maverick – Fast Track Chinese">
+      <span class="mm-marke-text">
+        <b>Grammatik Chinesisch</b>
+        <span>Jahrgangsstufen 10 – 12 · Nachschlagewerk</span>
+      </span>
+    </button>
+
+    <div class="mm-suchfeld">
+      <svg class="mm-lupe" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.4" aria-hidden="true">
+        <circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/>
+      </svg>
+      <label class="mm-nur-sr" for="mm-suche">Grammatik durchsuchen</label>
+      <input id="mm-suche" type="search" autocomplete="off" spellcheck="false"
+             enterkeyhint="search"
+             placeholder="Pinyin, deutsches Stichwort oder ganzer Satz …">
+      <button id="mm-loeschen" class="mm-loeschen" type="button"
+              title="Eingabe löschen" aria-label="Eingabe löschen" hidden>&times;</button>
+    </div>
+
+    <div class="mm-kopf-knoepfe">
+      <button class="mm-knopf mm-knopf--still" data-heim="1" type="button">
+        ☰ <span class="mm-nur-sr">Zum </span>Inhalt
+      </button>
+    </div>
+
+  </div>
+</header>
+
+<main class="mm-blatt" id="mm-app" tabindex="-1"></main>
+
+<button id="mm-hoch" class="mm-hoch" type="button"
+        title="Zum Seitenanfang" aria-label="Zum Seitenanfang">↑</button>
+
+<footer class="mm-fuss">
+  <p>
+    <b>Grammatikstrukturen Chinesisch · Jahrgangsstufen 10 – 12</b><br>
+    Ein Arbeits- und Nachschlagewerk für den Chinesischunterricht der
+    Sekundarstufe II von Stefan Happel.
+  </p>
+  <p>
+    Alle Inhalte stammen aus dem Grammatikskript; die Beispielsätze stehen
+    in <span class="pinyin">Pinyin</span> wie dort.
+  </p>
+  <p>© Mandarin Maverick – Fast Track Chinese</p>
+</footer>
+
+<script src="daten.js"></script>
+<script src="stichworte.js"></script>
+<script src="app.js"></script>
+
+<noscript>
+  <p style="max-width:40em;margin:40px auto;padding:0 20px">
+    Dieses Nachschlagewerk braucht JavaScript — die Suche und das Blättern
+    laufen vollständig im Browser, ohne Server. Bitte JavaScript einschalten.
+  </p>
+</noscript>
+
+</body>
+</html>

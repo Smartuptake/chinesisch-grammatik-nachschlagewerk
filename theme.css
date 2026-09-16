@@ -1,0 +1,476 @@
+/* ==========================================================================
+   Mandarin Maverick – Fast Track Chinese
+   theme.css · Grammatik-Nachschlagewerk
+   Tokens unveraendert aus MM_Designhandbuch v1.4, Kap. 3 (Farbe),
+   4 (Typografie), 8 (Tabellen), 9 (Kaesten), 15.1 (Tokens).
+   Das Folienraster aus Kap. 6 entfaellt — dies ist ein Dokument, keine
+   Praesentation; an seine Stelle tritt ein Lesemass von 74 Zeichen.
+   ========================================================================== */
+
+:root {
+  /* Marke */
+  --mm-turquoise:        #039A9A;
+  --mm-turquoise-dark:   #02736F;
+  --mm-turquoise-light:  #E6F5F5;
+  --mm-bordeaux:         #961B1D;
+
+  /* Sprachsemantik – nicht ueberschreiben (Kap. 3.3) */
+  --mm-pinyin:           #2271FF;
+  --mm-pinyin-small:     #1A5CD8;
+  --mm-hanzi:            #C61919;
+  --mm-german:           #5C5C5C;
+  --mm-german-strong:    #111111;
+
+  /* Neutral */
+  --mm-bg:               #FFFFFF;
+  --mm-bg-sunk:          #F6F8F9;
+  --mm-rule:             #707070;
+  --mm-rule-light:       #E3E6E8;
+
+  /* Signal */
+  --mm-correct:          #0E8A44;
+  --mm-warning:          #D2691E;
+
+  /* Schriftketten (Kap. 4.2) */
+  --mm-font-latin:   "Helvetica Neue", Helvetica, Arial, "Noto Sans", sans-serif;
+  --mm-font-display: "Helvetica Neue Condensed", "Arial Narrow",
+                     "Roboto Condensed", "Helvetica Neue", sans-serif;
+  --mm-font-hanzi:   "Kaiti SC", "STKaiti", "KaiTi", "Noto Serif SC",
+                     "Songti SC", serif;
+  --mm-font-formel:  "SF Mono", "Menlo", "Consolas", monospace;
+
+  /* Zeilenabstaende (Kap. 4.5) */
+  --mm-lh-de:     1.55;
+  --mm-lh-pinyin: 1.5;
+  --mm-lh-hanzi:  1.7;
+
+  /* Dokumentmasse */
+  --mm-mass:     74ch;    /* Lesemass des Fliesstextes */
+  --mm-gutter:   24px;
+  --mm-kopf-h:   auto;
+
+  --mm-fade: 200ms;
+  --mm-radius: 8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  margin: 0;
+  background: var(--mm-bg);
+  font-family: var(--mm-font-latin);
+  font-size: 17px;
+  line-height: var(--mm-lh-de);
+  color: var(--mm-german-strong);
+  -webkit-text-size-adjust: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Sprachsemantik (Kap. 3.3) — gilt ausnahmslos
+   -------------------------------------------------------------------------- */
+.pinyin { color: var(--mm-pinyin); }
+.hanzi  { color: var(--mm-hanzi); font-family: var(--mm-font-hanzi); }
+.de     { color: var(--mm-german-strong); }
+
+/* Unter 16 px reicht der Kontrast von #2271FF nicht (Kap. 3.5). */
+small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
+  color: var(--mm-pinyin-small);
+}
+
+/* --------------------------------------------------------------------------
+   Kopfleiste — traegt Suchfeld und Rueckweg, bleibt immer stehen
+   -------------------------------------------------------------------------- */
+.mm-kopf {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(255,255,255,.97);
+  backdrop-filter: saturate(140%) blur(8px);
+  border-bottom: 2px solid var(--mm-turquoise);
+}
+
+.mm-kopf-innen {
+  max-width: 1180px; margin: 0 auto;
+  padding: 10px var(--mm-gutter);
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+
+.mm-marke {
+  display: flex; align-items: center; gap: 12px; flex: 0 0 auto;
+  border: 0; background: none; padding: 0; cursor: pointer;
+  font: inherit; text-align: left; border-radius: var(--mm-radius);
+}
+.mm-marke:hover .mm-marke-text b { color: var(--mm-turquoise-dark); }
+.mm-marke:focus-visible { outline: 3px solid var(--mm-turquoise); outline-offset: 3px; }
+.mm-marke img { height: 38px; width: auto; display: block; }
+.mm-marke-text { line-height: 1.15; }
+.mm-marke-text b {
+  display: block; font-family: var(--mm-font-display);
+  font-size: 17px; letter-spacing: .01em; color: var(--mm-german-strong);
+}
+.mm-marke-text span { font-size: 12px; color: var(--mm-german); }
+
+.mm-suchfeld { flex: 1 1 320px; min-width: 240px; position: relative; }
+.mm-suchfeld input {
+  width: 100%; font: inherit; font-size: 17px;
+  padding: 11px 40px 11px 42px;
+  border: 2px solid var(--mm-rule-light); border-radius: 999px;
+  background: var(--mm-bg-sunk); color: var(--mm-german-strong);
+  transition: border-color var(--mm-fade), background var(--mm-fade);
+}
+.mm-suchfeld input:focus {
+  outline: none; border-color: var(--mm-turquoise); background: #fff;
+  box-shadow: 0 0 0 4px rgba(3,154,154,.12);
+}
+.mm-suchfeld input::placeholder { color: #9AA3A8; }
+/* Das eigene Loeschkreuz genuegt — das des Browsers doppelt es nur. */
+.mm-suchfeld input::-webkit-search-cancel-button,
+.mm-suchfeld input::-webkit-search-decoration { -webkit-appearance: none; }
+.mm-lupe {
+  position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+  width: 17px; height: 17px; pointer-events: none; opacity: .55;
+}
+.mm-loeschen {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  border: 0; background: none; cursor: pointer; font-size: 20px; line-height: 1;
+  color: var(--mm-german); padding: 6px 8px; border-radius: 50%;
+}
+.mm-loeschen:hover { color: var(--mm-bordeaux); background: var(--mm-bg-sunk); }
+
+.mm-kopf-knoepfe { display: flex; gap: 8px; flex: 0 0 auto; }
+
+/* --------------------------------------------------------------------------
+   Schaltflaechen
+   -------------------------------------------------------------------------- */
+.mm-knopf {
+  font: inherit; font-size: 15px; cursor: pointer;
+  padding: 9px 16px; border-radius: 999px;
+  border: 2px solid var(--mm-turquoise);
+  background: #fff; color: var(--mm-turquoise-dark);
+  transition: background var(--mm-fade), color var(--mm-fade);
+  white-space: nowrap;
+}
+.mm-knopf:hover { background: var(--mm-turquoise-light); }
+.mm-knopf--voll { background: var(--mm-turquoise); color: #fff; }
+.mm-knopf--voll:hover { background: var(--mm-turquoise-dark); color: #fff; }
+.mm-knopf--still {
+  border-color: var(--mm-rule-light); color: var(--mm-german);
+}
+.mm-knopf--still:hover { background: var(--mm-bg-sunk); color: var(--mm-german-strong); }
+.mm-knopf[aria-pressed="true"] {
+  background: var(--mm-turquoise); color: #fff; border-color: var(--mm-turquoise);
+}
+
+/* --------------------------------------------------------------------------
+   Seitenkoerper
+   -------------------------------------------------------------------------- */
+.mm-blatt { max-width: 1180px; margin: 0 auto; padding: 0 var(--mm-gutter) 96px; }
+
+.mm-titelzeile { padding: 28px 0 10px; }
+.mm-titelzeile h1 {
+  font-family: var(--mm-font-display);
+  font-size: clamp(26px, 4vw, 40px); line-height: 1.15;
+  margin: 0 0 6px; color: var(--mm-german-strong); letter-spacing: .005em;
+}
+.mm-titelzeile p { margin: 0; color: var(--mm-german); max-width: var(--mm-mass); }
+
+/* Filterleiste --------------------------------------------------------- */
+.mm-filter {
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  padding: 14px 0 18px; border-bottom: 1px solid var(--mm-rule-light);
+}
+.mm-filter-rubrik { font-size: 14px; color: var(--mm-german); margin-right: 4px; }
+
+/* --------------------------------------------------------------------------
+   Inhaltsverzeichnis
+   -------------------------------------------------------------------------- */
+.mm-lj-titel {
+  font-family: var(--mm-font-display);
+  font-size: 20px; color: var(--mm-turquoise-dark);
+  margin: 34px 0 12px; padding-bottom: 6px;
+  border-bottom: 2px solid var(--mm-turquoise-light);
+  display: flex; align-items: baseline; gap: 10px;
+}
+.mm-lj-titel span { font-size: 13px; color: var(--mm-german); font-family: var(--mm-font-latin); }
+
+.mm-ivz {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+}
+.mm-ivz-eintrag {
+  display: flex; gap: 12px; align-items: baseline; width: 100%;
+  text-align: left; font: inherit; cursor: pointer;
+  padding: 11px 14px; border-radius: var(--mm-radius);
+  border: 1px solid var(--mm-rule-light); background: #fff;
+  transition: border-color var(--mm-fade), background var(--mm-fade),
+              transform var(--mm-fade);
+}
+.mm-ivz-eintrag:hover {
+  border-color: var(--mm-turquoise); background: var(--mm-turquoise-light);
+}
+.mm-ivz-eintrag:focus-visible { outline: 3px solid var(--mm-turquoise); outline-offset: 2px; }
+.mm-ivz-nr {
+  flex: 0 0 2.6em; font-family: var(--mm-font-display);
+  font-size: 15px; color: var(--mm-turquoise-dark); font-weight: 700;
+}
+.mm-ivz-titel { flex: 1 1 auto; color: var(--mm-german-strong); font-size: 15.5px; }
+.mm-ivz-hsk { font-size: 12px; color: var(--mm-german); white-space: nowrap; }
+
+/* --------------------------------------------------------------------------
+   Suchtreffer
+   -------------------------------------------------------------------------- */
+.mm-such-kopf {
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  padding: 22px 0 12px;
+}
+.mm-such-kopf h2 {
+  font-family: var(--mm-font-display); font-size: 22px; margin: 0;
+  color: var(--mm-german-strong);
+}
+.mm-such-kopf .zahl { color: var(--mm-german); font-size: 15px; }
+
+.mm-treffer-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.mm-treffer {
+  width: 100%; text-align: left; font: inherit; cursor: pointer;
+  border: 1px solid var(--mm-rule-light); border-left: 4px solid var(--mm-turquoise);
+  border-radius: var(--mm-radius); background: #fff;
+  padding: 13px 16px;
+  transition: background var(--mm-fade), border-color var(--mm-fade);
+}
+.mm-treffer:hover { background: var(--mm-turquoise-light); }
+.mm-treffer:focus-visible { outline: 3px solid var(--mm-turquoise); outline-offset: 2px; }
+.mm-treffer-kopf { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.mm-treffer-nr {
+  font-family: var(--mm-font-display); font-weight: 700;
+  color: var(--mm-turquoise-dark); font-size: 15px;
+}
+.mm-treffer-titel { font-size: 16.5px; color: var(--mm-german-strong); font-weight: 600; }
+.mm-treffer-grund {
+  font-size: 12px; color: var(--mm-german);
+  border: 1px solid var(--mm-rule-light); border-radius: 999px; padding: 1px 9px;
+}
+.mm-treffer-zeile {
+  margin: 6px 0 0; font-size: 14.5px; color: var(--mm-german);
+  line-height: 1.45;
+}
+.mm-treffer mark, .mm-kapitel mark {
+  background: #FFF0A8; color: inherit; border-radius: 3px; padding: 0 2px;
+}
+
+.mm-leer {
+  border: 1px dashed var(--mm-rule-light); border-radius: var(--mm-radius);
+  padding: 26px; text-align: center; color: var(--mm-german);
+  max-width: var(--mm-mass);
+}
+.mm-leer b { color: var(--mm-german-strong); }
+.mm-vorschlaege { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 14px; }
+.mm-vorschlag {
+  font: inherit; font-size: 14px; cursor: pointer;
+  border: 1px solid var(--mm-rule-light); border-radius: 999px;
+  background: #fff; padding: 5px 13px; color: var(--mm-turquoise-dark);
+}
+.mm-vorschlag:hover { background: var(--mm-turquoise-light); border-color: var(--mm-turquoise); }
+
+/* --------------------------------------------------------------------------
+   Kapitelansicht
+   -------------------------------------------------------------------------- */
+.mm-kapitel { max-width: 860px; }
+
+.mm-kapitel-kopf { padding: 24px 0 16px; border-bottom: 2px solid var(--mm-turquoise); }
+.mm-kapitel-kopf h1 {
+  font-family: var(--mm-font-display);
+  font-size: clamp(24px, 3.4vw, 34px); line-height: 1.2;
+  margin: 4px 0 10px; color: var(--mm-german-strong);
+}
+.mm-kapitel-nr {
+  font-family: var(--mm-font-display); font-weight: 700;
+  color: var(--mm-turquoise-dark); font-size: 15px; letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.mm-marken { display: flex; gap: 8px; flex-wrap: wrap; }
+.mm-marke-chip {
+  font-size: 12.5px; padding: 3px 11px; border-radius: 999px;
+  background: var(--mm-turquoise-light); color: var(--mm-turquoise-dark);
+  border: 1px solid rgba(3,154,154,.28);
+}
+.mm-marke-chip--hsk { background: #fff; color: var(--mm-german); border-color: var(--mm-rule-light); }
+
+.mm-abschnitt { margin: 26px 0 0; max-width: var(--mm-mass); }
+
+.mm-frage {
+  font-family: var(--mm-font-display); font-size: 20px; line-height: 1.3;
+  color: var(--mm-turquoise-dark); margin: 0 0 8px;
+}
+.mm-frage::before {
+  content: "▸"; color: var(--mm-turquoise); margin-right: 8px; font-size: 16px;
+}
+.mm-zwischentitel {
+  font-size: 17px; font-weight: 700; color: var(--mm-german-strong);
+  margin: 0 0 8px; line-height: 1.35;
+}
+.mm-zeile { margin: 0 0 7px; line-height: var(--mm-lh-de); }
+.mm-zeile.py { line-height: var(--mm-lh-pinyin); }
+
+/* Strukturformel — der Blickfang jedes Kapitels (Kap. 9) */
+.mm-formel {
+  display: block; margin: 14px 0; padding: 13px 18px;
+  background: var(--mm-turquoise-light);
+  border-left: 4px solid var(--mm-turquoise);
+  border-radius: 0 var(--mm-radius) var(--mm-radius) 0;
+  font-family: var(--mm-font-formel); font-size: 16px; line-height: 1.5;
+  color: var(--mm-turquoise-dark); font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.mm-formel .pinyin { color: var(--mm-pinyin); }
+
+/* Merke-Kasten (Kap. 9) */
+.mm-merke {
+  margin: 20px 0; padding: 14px 18px;
+  border: 1px solid rgba(150,27,29,.25);
+  border-left: 4px solid var(--mm-bordeaux);
+  border-radius: 0 var(--mm-radius) var(--mm-radius) 0;
+  background: #FCF6F6;
+}
+.mm-merke b {
+  display: block; color: var(--mm-bordeaux);
+  font-family: var(--mm-font-display); letter-spacing: .04em;
+  text-transform: uppercase; font-size: 13px; margin-bottom: 6px;
+}
+
+/* Tabellen (Kap. 8) */
+.mm-tabelle-huelle { overflow-x: auto; margin: 18px 0; }
+.mm-tabelle { border-collapse: collapse; width: 100%; font-size: 15px; }
+.mm-tabelle th, .mm-tabelle td {
+  border: 1px solid var(--mm-rule-light); padding: 8px 11px;
+  text-align: left; vertical-align: top;
+}
+.mm-tabelle thead th { background: var(--mm-turquoise-light); color: var(--mm-turquoise-dark); }
+.mm-tabelle tbody tr:nth-child(even) { background: var(--mm-bg-sunk); }
+
+/* Uebungen ------------------------------------------------------------- */
+.mm-uebungen { margin: 34px 0 0; max-width: var(--mm-mass); }
+.mm-uebungen > summary {
+  cursor: pointer; list-style: none;
+  font-family: var(--mm-font-display); font-size: 18px;
+  color: var(--mm-turquoise-dark);
+  padding: 12px 16px; border: 1px solid var(--mm-rule-light);
+  border-radius: var(--mm-radius); background: var(--mm-bg-sunk);
+  display: flex; align-items: center; gap: 10px;
+}
+.mm-uebungen > summary::-webkit-details-marker { display: none; }
+.mm-uebungen > summary::before {
+  content: "＋"; color: var(--mm-turquoise); font-size: 18px; line-height: 1;
+}
+.mm-uebungen[open] > summary::before { content: "－"; }
+.mm-uebungen > summary:hover { background: var(--mm-turquoise-light); }
+.mm-uebungen > summary .anzahl { margin-left: auto; font-size: 13px; color: var(--mm-german); font-family: var(--mm-font-latin); }
+
+.mm-uebung { margin: 20px 0 0; padding-left: 4px; }
+.mm-uebung-kopf {
+  font-weight: 700; color: var(--mm-german-strong);
+  margin: 0 0 10px; font-size: 16px;
+}
+.mm-aufgaben { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.mm-aufgabe {
+  border: 1px solid var(--mm-rule-light); border-radius: var(--mm-radius);
+  padding: 10px 13px; background: #fff;
+}
+.mm-aufgabe-text { margin: 0; }
+.mm-loesung-knopf {
+  font: inherit; font-size: 13.5px; cursor: pointer; margin-top: 8px;
+  border: 1px solid var(--mm-rule-light); border-radius: 999px;
+  background: #fff; color: var(--mm-turquoise-dark); padding: 4px 13px;
+}
+.mm-loesung-knopf:hover { background: var(--mm-turquoise-light); border-color: var(--mm-turquoise); }
+.mm-loesung {
+  margin: 8px 0 0; padding: 9px 12px;
+  background: var(--mm-turquoise-light); border-radius: var(--mm-radius);
+}
+.mm-loesung p { margin: 0 0 4px; }
+.mm-loesung p:last-child { margin-bottom: 0; }
+.mm-loesung[hidden] { display: none; }
+.mm-offen { color: var(--mm-german); font-size: 13.5px; margin: 8px 0 0; font-style: italic; }
+
+/* Rueckweg unter jedem Kapitel ---------------------------------------- */
+.mm-rueckweg {
+  margin: 44px 0 0; padding: 20px 0 0;
+  border-top: 1px solid var(--mm-rule-light);
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+}
+.mm-rueckweg .hinweis { font-size: 13.5px; color: var(--mm-german); flex: 1 1 100%; margin: 0 0 4px; }
+
+.mm-nachbarn {
+  display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap;
+  margin: 18px 0 0;
+}
+.mm-nachbar {
+  font: inherit; font-size: 14px; cursor: pointer; text-align: left;
+  border: 1px solid var(--mm-rule-light); border-radius: var(--mm-radius);
+  background: #fff; padding: 9px 14px; color: var(--mm-german-strong);
+  max-width: 48%; flex: 1 1 auto;
+}
+.mm-nachbar:hover { border-color: var(--mm-turquoise); background: var(--mm-turquoise-light); }
+.mm-nachbar span { display: block; font-size: 12px; color: var(--mm-german); }
+.mm-nachbar--weiter { text-align: right; }
+
+/* --------------------------------------------------------------------------
+   Fuss
+   -------------------------------------------------------------------------- */
+.mm-fuss {
+  border-top: 1px solid var(--mm-rule-light);
+  margin-top: 60px; padding: 22px var(--mm-gutter) 40px;
+  font-size: 13px; color: var(--mm-german);
+  text-align: center;
+}
+.mm-fuss a { color: var(--mm-turquoise-dark); }
+
+/* Sprung zum Seitenanfang --------------------------------------------- */
+.mm-hoch {
+  position: fixed; right: 20px; bottom: 20px; z-index: 40;
+  width: 46px; height: 46px; border-radius: 50%;
+  border: 1px solid var(--mm-rule-light); background: #fff;
+  color: var(--mm-turquoise-dark); font-size: 20px; cursor: pointer;
+  box-shadow: 0 3px 12px rgba(0,0,0,.12);
+  opacity: 0; pointer-events: none; transition: opacity var(--mm-fade);
+}
+.mm-hoch.sichtbar { opacity: 1; pointer-events: auto; }
+.mm-hoch:hover { background: var(--mm-turquoise-light); }
+
+/* Nur fuer Screenreader */
+.mm-nur-sr {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   Kleine Bildschirme
+   -------------------------------------------------------------------------- */
+@media (max-width: 720px) {
+  body { font-size: 16px; }
+  .mm-kopf-innen { padding: 8px 14px; gap: 10px; }
+  .mm-marke img { height: 30px; }
+  .mm-marke-text b { font-size: 15px; }
+  .mm-marke-text span { display: none; }
+  .mm-suchfeld { flex: 1 1 100%; order: 3; }
+  .mm-kopf-knoepfe { margin-left: auto; }
+  .mm-blatt { padding: 0 14px 80px; }
+  .mm-ivz { grid-template-columns: 1fr; }
+  .mm-nachbar { max-width: 100%; }
+  .mm-hoch { right: 12px; bottom: 12px; }
+}
+
+/* --------------------------------------------------------------------------
+   Druck — das aufgeschlagene Kapitel, ohne Bedienoberflaeche
+   -------------------------------------------------------------------------- */
+@media print {
+  .mm-kopf, .mm-rueckweg, .mm-nachbarn, .mm-hoch, .mm-filter,
+  .mm-loesung-knopf { display: none !important; }
+  body { font-size: 11pt; color: #000; }
+  .mm-kapitel { max-width: none; }
+  .mm-loesung[hidden] { display: block !important; }
+  .mm-uebungen > summary { background: none; border: 0; padding-left: 0; }
+  .mm-abschnitt, .mm-uebung { break-inside: avoid; }
+  a[href]::after { content: ""; }
+}
