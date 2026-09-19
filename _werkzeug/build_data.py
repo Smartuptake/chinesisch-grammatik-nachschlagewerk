@@ -1,8 +1,26 @@
 #!/usr/bin/env python3
-"""Baut aus blocks.json die Kapiteldaten des Nachschlagewerks.
+"""Baut aus blocks.json die Kapiteldaten des Grammatik-Nachschlagewerks.
 
-Jede Zeile behaelt ihre Runs, damit Pinyin auch innerhalb eines deutschen
-Satzes blau bleibt — so wie im Skript und im MM-Designhandbuch (Kap. 3.3).
+Aufruf:  python3 build_data.py blocks.json grammatik.json
+
+WORAN DIE KAPITEL ERKANNT WERDEN
+Seit der Fassung „HSK-Struktur" trägt jeder Kapiteltitel im Skript die Marken
+!!!…!!!. Daran — und nur daran — werden die Kapitel geschnitten. Die
+Textmarken _Toc_MM_### bleiben trotzdem wichtig: sie sind über alle Fassungen
+hinweg dieselben und tragen deshalb die Zuordnung alter Kapitelnummern auf
+neue (siehe `bm`). Ein Kapitel kann mehrere davon enthalten, seit die drei
+chúfēi-Strukturen zu einem Kapitel zusammengefasst wurden.
+
+Direkt unter dem Titel steht die Zeile
+    HSK-Stufe/n: [HSK 3.0: HSK 1 · HSK 2 · HSK 4]
+oder
+    HSK-Stufe/n: [HSK 3.0: kein eigener Grammatikpunkt – ergänzender Stoff]
+Daraus entstehen `hsk` (alle genannten Stufen) und `einstieg` (die niedrigste).
+Nach `einstieg` ist das Skript sortiert; das Nachschlagewerk gliedert genauso.
+
+Pinyin erkennt das Skript an der blauen Schriftfarbe. Jede Zeile behält ihre
+Runs, damit Pinyin auch innerhalb eines deutschen Satzes blau bleibt — so
+verlangt es das MM-Designhandbuch in Kapitel 3.3 und 3.4.
 """
 import json, re, sys
 from collections import Counter
@@ -28,22 +46,36 @@ def clean(t):
     return re.sub(r'[ ]{2,}', ' ', t.replace('\t', ' ').replace('\xa0', ' '))
 
 
+HAN = re.compile(r'[一-鿿]')
+
+
 def mk_runs(p):
-    """Runs auf (Text, Pinyin?) reduzieren und Gleichartiges zusammenfassen."""
-    out = []
+    """Runs auf (Text, Sprache) reduzieren und Gleichartiges zusammenfassen.
+
+    Sprache: 0 = Deutsch, 1 = Pinyin, 2 = Hanzi. Hanzi werden am Zeichen
+    erkannt, nicht an der Farbe — im Skript stehen sie teils schwarz, im
+    Nachschlagewerk müssen sie nach Handbuch 3.3 immer in #B02418 und in
+    Kaiti SC erscheinen.
+    """
+    roh = []
     for r in p['runs']:
         t = clean(r['t'])
         if not t:
             continue
         py = is_blue(r['c'])
-        if out and out[-1][1] == py:
-            out[-1][0] += t
-        else:
-            out.append([t, py])
-    if out:
-        out[0][0] = out[0][0].lstrip()
-        out[-1][0] = out[-1][0].rstrip()
-    return [[t, 1] if py else [t, 0] for t, py in out if t]
+        # Hanzi aus dem Run herauslösen, damit sie eigene Farbe bekommen
+        for teil in re.split(r'([一-鿿]+)', t):
+            if not teil:
+                continue
+            art = 2 if HAN.match(teil) else (1 if py else 0)
+            if roh and roh[-1][1] == art:
+                roh[-1][0] += teil
+            else:
+                roh.append([teil, art])
+    if roh:
+        roh[0][0] = roh[0][0].lstrip()
+        roh[-1][0] = roh[-1][0].rstrip()
+    return [[t, a] for t, a in roh if t]
 
 
 def line_of(p, numbered):
@@ -51,8 +83,8 @@ def line_of(p, numbered):
     txt = ''.join(t for t, _ in rs).strip()
     if not txt:
         return None
-    blue = sum(len(t) for t, py in rs if py)
-    lang = 'py' if blue >= len(txt) * 0.75 else ('de' if blue == 0 else 'mix')
+    blau = sum(len(t) for t, a in rs if a == 1)
+    lang = 'py' if blau >= len(txt) * 0.75 else ('de' if blau == 0 else 'mix')
     z = {'r': rs, 'l': lang}
     if numbered:
         z['n'] = 1
@@ -63,10 +95,12 @@ def all_bold(p):
     return bool(p['runs']) and all(r['b'] for r in p['runs'])
 
 
+TITEL = re.compile(r'^!!!\s*(.+?)\s*!!!$')
+HSKZ = re.compile(r'^HSK-Stufe/n\s*:\s*\[(.*)\]\s*$')
 RULE = re.compile(r'^[_\-–—\s]{10,}$')
 INTRO = 'Bearbeite die folgenden Fragen/Übungen'
-LJ = re.compile(r'^Grammatikstrukturen\s+([\d./]+)\s*Lernjahr')
-HSK = re.compile(r'^HSK\s*3\.0\s*:')
+KEY = 'KEY – KEEP EDUCATING YOURSELF'
+NUMMER = re.compile(r'^Grammatikstruktur\s+Nr\.\s*(\d{1,3})\s*$')
 MERKE = re.compile(r'^Merke\s*[!:]?$', re.I)
 
 TASK = re.compile(
@@ -83,27 +117,24 @@ def is_formel(t):
         return False
     if len(t) > 160 or '?' in t:
         return False
-    i = t.find('+')
-    if i > 45:
+    if t.find('+') > 45:
         return False
     return not t.endswith(('.', '!')) or t.count('+') >= 2
 
 
-# --------------------------------------------------------------------------
-# Titel, die im Skript selbst nichts aussagen
-# Kapitel 48 heisst dort nur „Die Strukturen fuer:" — im Inhaltsverzeichnis
-# steht es damit ohne erkennbaren Gegenstand da. Stefan hat den Titel auf die
-# Strukturformeln gesetzt, um die es in dem Kapitel geht. Aendert sich das
-# Skript, bleibt der Titel dadurch erhalten.
-# --------------------------------------------------------------------------
-TITEL_ERSATZ = {
-    48: 'S + gěi + mǒurén + dǎ (yī ge) diànhuà / '
-        'S + gěi + mǒurén + mǎi + Nomen / usw.',
-}
+def ist_grafiktext(t):
+    """Flachgeklopfter Text aus einer SmartArt-Grafik.
+
+    Word liefert den Inhalt solcher Grafiken als einen einzigen Absatz ohne
+    Leerzeichen, in dem jede Beschriftung doppelt steht — lesbar ist das
+    nicht. Erkennungsmerkmal ist ein Wort von absurder Laenge. Das laengste
+    echte Wort im Skript hat 45 Zeichen („Lage-/Richtungswoerter/…"), die
+    Schwelle liegt sicher darueber.
+    """
+    return any(len(w) > 48 and not re.match(r'^[_\-–—]+$', w) for w in t.split())
 
 
 def fix_titel(t):
-    """Nur ein alleinstehendes Schlussanfuehrungszeichen entfernen."""
     t = t.strip()
     if t.endswith('"') and t.count('"') % 2 == 1:
         t = t[:-1].strip()
@@ -111,30 +142,89 @@ def fix_titel(t):
 
 
 # --------------------------------------------------------------------------
-# Inhaltsverzeichnis des Skripts — liefert Titel und Seitenzahl
+# Titel, die im Skript selbst nichts aussagen
+# Das Kapitel „Die Strukturen für:" steht ohne erkennbaren Gegenstand im
+# Verzeichnis. Stefan hat den Titel auf die Strukturformeln gesetzt, um die es
+# darin geht. Der Schlüssel ist die Textmarke, nicht die Kapitelnummer — die
+# Nummer ändert sich bei jeder Umsortierung des Skripts, die Textmarke nicht.
+# --------------------------------------------------------------------------
+TITEL_ERSATZ = {
+    '_Toc_MM_048': 'S + gěi + mǒurén + dǎ (yī ge) diànhuà / '
+                   'S + gěi + mǒurén + mǎi + Nomen / usw.',
+}
+
+# --------------------------------------------------------------------------
+# Inhaltsverzeichnis des Skripts — liefert Kapitelnummer und Seitenzahl.
+# Die Zeilen lauten „7.\tTitel\t19"; der Vorspann steht ohne Nummer.
 # --------------------------------------------------------------------------
 TOC = {}
-for b in blocks[:260]:
+
+
+def toc_key(t):
+    return re.sub(r'[^0-9a-zäöüßA-ZÄÖÜ]', '', t).lower()[:60]
+
+
+kapitel_start = [i for i, b in enumerate(blocks)
+                 if b['kind'] == 'p' and TITEL.match(b['text'].strip())]
+if not kapitel_start:
+    sys.exit('Keine !!!Kapiteltitel!!! gefunden — falsche Fassung des Skripts?')
+
+for b in blocks[:kapitel_start[0]]:
     if b['kind'] != 'p':
         continue
-    m = re.match(r'^\s*(\d{1,3})\.	(.+?)	(\d{1,3})\s*$', b['text'])
+    m = re.match(r'^(?:(\d{1,3})\.)?\t?(.+?)\t(\d{1,3})\s*$', b['text'])
     if m:
-        TOC[int(m.group(1))] = (fix_titel(clean(m.group(2))), int(m.group(3)))
+        TOC[toc_key(m.group(2))] = (int(m.group(1)) if m.group(1) else 0,
+                                    int(m.group(3)))
+
+# --------------------------------------------------------------------------
+# Vorbemerkung des Skripts: wie die HSK-Zeile zu lesen ist.
+# Sie erklaert den Schuelern die Ordnung und gehoert deshalb in die App.
+# --------------------------------------------------------------------------
+vorwort = []
+anfang = None
+for i, b in enumerate(blocks[:kapitel_start[0]]):
+    if b['kind'] == 'p' and b['text'].strip().startswith('So liest du sie'):
+        anfang = i
+        break
+if anfang is not None:
+    for b in blocks[anfang:kapitel_start[0]]:
+        if b['kind'] != 'p':
+            continue
+        t = clean(b['text']).strip()
+        if t and not RULE.match(t):
+            z = line_of(b, False)
+            if z:
+                vorwort.append(z)
 
 # --------------------------------------------------------------------------
 # Kapitel schneiden
 # --------------------------------------------------------------------------
-starts = [i for i, b in enumerate(blocks) if b.get('bm')]
-starts.append(len(blocks))
+kapitel_start.append(len(blocks))
 kapitel = []
+abweichung = []   # Kapitelnummer im Verzeichnis != Nummer im Kapitelkopf
+grafiktexte = []  # als unlesbar aussortierte SmartArt-Absaetze
 
-for k in range(len(starts) - 1):
-    s, e = starts[k], starts[k + 1]
-    toc_titel, seite = TOC.get(k + 1, ('', 0))
-    titel = (TITEL_ERSATZ.get(k + 1)
-             or fix_titel(clean(blocks[s].get('text', '')))
-             or toc_titel)
-    hsk, lernjahr = '', ''
+for k in range(len(kapitel_start) - 1):
+    s, e = kapitel_start[k], kapitel_start[k + 1]
+    roh_titel = fix_titel(TITEL.match(blocks[s]['text'].strip()).group(1))
+
+    marken = []
+    for b in blocks[s:e]:
+        for name in b.get('bm', []):
+            if name not in marken:
+                marken.append(name)
+
+    titel = roh_titel
+    for m in marken:
+        if m in TITEL_ERSATZ:
+            titel = TITEL_ERSATZ[m]
+            break
+
+    nr, seite = TOC.get(toc_key(roh_titel), (None, 0))
+
+    nr_skript = None          # aus der Zeile „Grammatikstruktur Nr. N"
+    hsk, ergaenzend = [], False
     abschnitte, cur = [], None
 
     def push(a):
@@ -151,16 +241,25 @@ for k in range(len(starts) - 1):
             continue
 
         t = clean(b['text']).strip()
-        if not t or RULE.match(t):
+        if not t or RULE.match(t) or t == KEY or t.startswith(INTRO):
             continue
-        m = LJ.match(t)
+        if ist_grafiktext(t):
+            grafiktexte.append(t[:40])
+            continue
+
+        m = NUMMER.match(t)
         if m:
-            lernjahr = m.group(1).rstrip('.')
+            nr_skript = int(m.group(1))
             continue
-        if HSK.match(t):
-            hsk = t
-            continue
-        if t.startswith(INTRO):
+
+        m = HSKZ.match(t)
+        if m:
+            inhalt = re.sub(r'HSK\s*3\.0\s*:', '', m.group(1))
+            if 'kein eigener Grammatikpunkt' in inhalt:
+                ergaenzend = True
+            else:
+                hsk = sorted(set(int(n) for n in re.findall(r'HSK\s*([1-9])',
+                                                            inhalt)))
             continue
 
         bold = all_bold(b)
@@ -180,12 +279,8 @@ for k in range(len(starts) - 1):
 
         if bold:
             push(cur)
-            if t.endswith('?'):
-                typ = 'frage'
-            elif TASK.match(t):
-                typ = 'uebung'
-            else:
-                typ = 'titel'
+            typ = ('frage' if t.endswith('?')
+                   else 'uebung' if TASK.match(t) else 'titel')
             cur = {'typ': typ, 'kopf': t, 'zeilen': []}
             continue
 
@@ -194,9 +289,14 @@ for k in range(len(starts) - 1):
         cur['zeilen'].append(z)
 
     push(cur)
-    kapitel.append({'nr': k + 1, 'titel': titel, 'hsk': hsk,
-                    'lj': lernjahr, 'seite': seite,
-                    'abschnitte': abschnitte})
+    if nr_skript is not None and nr != nr_skript:
+        abweichung.append((roh_titel[:50], nr, nr_skript))
+
+    kapitel.append({
+        'nr': nr, 'titel': titel, 'hsk': hsk, 'ergaenzend': ergaenzend,
+        'einstieg': hsk[0] if hsk else 0, 'seite': seite,
+        'bm': marken, 'abschnitte': abschnitte,
+    })
 
 # --------------------------------------------------------------------------
 # Uebungen in Aufgabe/Loesung-Paare zerlegen
@@ -225,19 +325,47 @@ for kap in kapitel:
         a['items'] = [i for i in items if i['a'] or i['l']]
         del a['zeilen']
 
-json.dump(kapitel, open(OUT, 'w'), ensure_ascii=False, separators=(',', ':'))
+json.dump({'kapitel': kapitel, 'vorwort': vorwort},
+          open(OUT, 'w'), ensure_ascii=False, separators=(',', ':'))
 
 # --------------------------------------------------------------------------
-# Bericht
+# Bericht — jede Zahl hier ist eine Probe auf die Zerlegung
 # --------------------------------------------------------------------------
-print('Kapitel:', len(kapitel))
+print('Kapitel:', len(kapitel), '(davon nummeriert: %d, Vorspann: %d)'
+      % (sum(1 for k in kapitel if k['nr']),
+         sum(1 for k in kapitel if k['nr'] == 0)))
 print('Abschnitte:', dict(Counter(a['typ'] for k in kapitel
                                   for a in k['abschnitte'])))
 ue = [it for k in kapitel for a in k['abschnitte']
       if a['typ'] == 'uebung' for it in a['items']]
 print('Uebungsaufgaben:', len(ue),
       '| davon mit Loesung:', sum(1 for i in ue if i['l']))
-print('TOC-Eintraege:', len(TOC))
-print('ohne Titel:', [k['nr'] for k in kapitel if not k['titel']])
-print('ohne HSK:', [k['nr'] for k in kapitel if not k['hsk']])
-print('ohne Lernjahr:', [k['nr'] for k in kapitel if not k['lj']])
+print('IVZ-Eintraege:', len(TOC),
+      '| Kapitel ohne IVZ-Zuordnung:', [k['titel'][:40]
+                                        for k in kapitel if k['nr'] is None])
+print('Vorwortzeilen:', len(vorwort))
+print('Grafiktexte aussortiert:', len(grafiktexte),
+      [g for g in grafiktexte])
+print('Einstiegsstufen:', dict(Counter(
+    ('ergänzend' if k['ergaenzend'] else k['einstieg']) for k in kapitel)))
+print('Textmarken gesamt:', sum(len(k['bm']) for k in kapitel),
+      '| Kapitel ohne Textmarke:', [k['nr'] for k in kapitel if not k['bm']])
+# Das Skript zaehlt an zwei Stellen: im Inhaltsverzeichnis ohne den Vorspann
+# (1..101), in der Zeile „Grammatikstruktur Nr. N" mit ihm (1..102). Die App
+# folgt dem Verzeichnis — der Pruefbericht spricht von 101 Grammatikstrukturen,
+# und der Vorspann ist eine Begriffserklaerung, keine Struktur. Hier wird nur
+# geprueft, dass der Versatz durchgehend genau 1 betraegt; alles andere waere
+# ein echter Fehler im Skript.
+versatz = sorted(set(b - a for _, a, b in abweichung))
+if not abweichung:
+    print('Nummer im Kapitelkopf: deckungsgleich mit dem Verzeichnis')
+elif versatz == [1]:
+    print('Nummer im Kapitelkopf: um genau 1 hoeher in %d von %d Kapiteln '
+          '(der Vorspann zaehlt dort als Nr. 1) — erwartet, die App folgt '
+          'dem Verzeichnis' % (len(abweichung), len(kapitel)))
+else:
+    print('ACHTUNG Nummerierung uneinheitlich, Versatz:', versatz)
+    for t, a, b in abweichung[:10]:
+        print('   %-50s Verzeichnis %s, Kapitelkopf %s' % (t, a, b))
+folge = [k['nr'] for k in kapitel if k['nr']]
+print('Nummern lueckenlos 1..%d:' % len(folge), folge == list(range(1, len(folge) + 1)))

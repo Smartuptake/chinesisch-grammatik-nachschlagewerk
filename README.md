@@ -1,10 +1,15 @@
 # Grammatikstrukturen Chinesisch · Jahrgangsstufen 10 – 12
 
 Das interaktive Nachschlagewerk zum Grammatikskript von
-**Mandarin Maverick – Fast Track Chinese**. 104 Kapitel, durchsuchbar auf
-Pinyin und auf Deutsch, bis hin zum ganzen Satz.
+**Mandarin Maverick – Fast Track Chinese**. 101 Grammatikstrukturen, geordnet
+nach HSK-Stufen, durchsuchbar auf Pinyin und auf Deutsch bis hin zum ganzen
+Satz.
 
 © 2026 Mandarin Maverick · Stefan Happel · Alle Rechte vorbehalten
+
+Grundlage ist die Fassung **„HSK-Struktur"** des Skripts
+(`Grammatikskript-Jgst-10-12-HSK-Struktur_1.docx`).
+Gestaltung nach **MM-Designhandbuch v1.5**.
 
 ## Aufrufen
 
@@ -14,6 +19,22 @@ erreichbar — dieser Link lässt sich an die Kurse weitergeben.
 
 Auf dem Handy funktioniert sie genauso; wer sie dort zum Startbildschirm
 hinzufügt, hat sie wie eine App.
+
+## Die Ordnung
+
+Das Skript ordnet die Grammatikstrukturen nach der **niedrigsten HSK-Stufe**,
+auf der sie verlangt werden. Genauso gliedert das Verzeichnis: erst alle
+Strukturen ab HSK 1, dann die ab HSK 2 und so fort. Zwei Kapitel führt der
+HSK-Standard nicht als eigenen Grammatikpunkt; sie stehen am Ende unter
+*Ergänzender Stoff*.
+
+Viele Kapitel nennen mehrere Stufen, weil der HSK ein Thema über mehrere
+Prüfungsstufen verteilt, das Skript es aber an einer Stelle vollständig
+behandelt. **Der Stufenfilter sucht deshalb in allen genannten Stufen, nicht
+nur in der Einstiegsstufe**: Wer auf HSK 4 lernt, bekommt auch die
+HSK-4-Erweiterung eines Kapitels, das im HSK-1-Block steht — die Trefferzeile
+sagt dazu, wie viele das sind. Die Erklärung dazu steht in der App unter
+„Wie die HSK-Angabe zu lesen ist" und stammt wörtlich aus dem Skript.
 
 ## Suchen
 
@@ -25,7 +46,8 @@ Ins Feld oben darf alles, was gerade zur Hand ist:
 | ein deutsches Stichwort | `Vergangenheit` · `obwohl` · `wie lange` | der Partikel le, den Konzessivsätzen, den Zeitdauerangaben |
 | ein ganzer Satz auf Pinyin | `Wǒ bǎ shū fàng zài zhuōzi shàng.` | der bǎ-Konstruktion |
 | ein ganzer Satz auf Deutsch | `Ich habe das Buch auf den Tisch gelegt.` | derselben |
-| eine Kapitelnummer | `69` | dem Kapitel |
+| eine HSK-Stufe | `HSK 4` | dem Verzeichnis, auf diese Stufe gefiltert |
+| eine Kapitelnummer | `84` | dem Kapitel |
 
 Die Trefferliste nennt zu jedem Kapitel die Zeile, die den Treffer belegt —
 die Strukturformel, die Leitfrage oder den Beispielsatz. Ein Klick springt
@@ -51,53 +73,83 @@ zusammengeklappt, die **Übungen aus dem Skript** — jede Aufgabe mit einem
 Knopf, der die Lösung aufdeckt. So steht die Antwort nicht im Weg, wenn man
 nur nachschlagen will, und ist da, wenn man üben will.
 
-Jedes Kapitel nennt sein Lernjahr, seine HSK-3.0-Stufen und die Seite im
-gedruckten Skript, damit sich beides gegenlesen lässt.
+Jedes Kapitel nennt seine HSK-Stufen und die Seite im gedruckten Skript,
+damit sich beides gegenlesen lässt.
+
+### Alte Kapitelnummern
+
+Mit der Fassung „HSK-Struktur" hat sich die Reihenfolge geändert: die
+bǎ-Konstruktion war Nr. 69 und ist jetzt Nr. 84. Automatisch umleiten lässt
+sich das **nicht** — alter und neuer Nummernkreis laufen beide von 1 bis 101,
+eine Adresse `#/kapitel/69` trägt kein Merkmal, aus welcher Fassung sie
+stammt; eine stille Umleitung würde genauso viele richtige Links zerstören,
+wie sie falsche rettet. Stattdessen zeigt jedes betroffene Kapitel oben eine
+Zeile, was früher unter dieser Nummer stand, mit einem Sprung dorthin.
 
 ## Dateien
 
 | Datei | Inhalt |
 |---|---|
 | `index.html` | die Seite — nur das Gerüst, der Inhalt kommt aus `daten.js` |
-| `theme.css` | das Gestaltungssystem nach MM-Designhandbuch v1.4 |
-| `daten.js` | die 104 Kapitel, aus dem Skript erzeugt |
+| `theme.css` | das Gestaltungssystem nach MM-Designhandbuch v1.5 |
+| `daten.js` | die Kapitel, aus dem Skript erzeugt |
 | `stichworte.js` | deutsche Suchbegriffe je Kapitel — **hier darf ergänzt werden** |
 | `app.js` | Suche, Wegfindung, Darstellung |
-| `_werkzeug/` | die beiden Python-Skripte, die `daten.js` erzeugen |
+| `_werkzeug/` | die drei Python-Skripte, die `daten.js` erzeugen |
 
 ## Ändern
 
 **Ein Suchbegriff fehlt.** Das ist der häufigste Fall und der einfachste:
-`stichworte.js` öffnen, die Zeile mit der Kapitelnummer suchen, das Wort
-hinten anfügen, speichern. Groß- und Kleinschreibung sowie Töne sind
-gleichgültig. Ein Wort, das hier steht, wiegt in der Suche schwerer als
-jedes Vorkommen im Fließtext — wer es einträgt, sagt damit: *dieses* Kapitel
-handelt davon.
+`stichworte.js` öffnen, die Zeile mit der Kapitelnummer suchen — hinter jeder
+Zeile steht der Kapiteltitel —, das Wort hinten anfügen, speichern. Groß- und
+Kleinschreibung sowie Töne sind gleichgültig. Ein Wort, das hier steht, wiegt
+in der Suche schwerer als jedes Vorkommen im Fließtext; wer es einträgt, sagt
+damit: *dieses* Kapitel handelt davon.
 
 **Das Skript hat eine neue Fassung.** Dann wird `daten.js` neu erzeugt; von
 Hand sollte man es nicht anfassen:
 
 ```bash
-python3 _werkzeug/extract.py blocks.json
-python3 _werkzeug/build_data.py blocks.json grammatik.json
+python3 _werkzeug/extract.py ../Grammatikskript-Jgst-10-12-HSK-Struktur_1.docx .bau/blocks.json
+python3 _werkzeug/build_data.py .bau/blocks.json .bau/grammatik.json
+python3 _werkzeug/schreibe_daten.py .bau/grammatik.json daten.js .bau/daten_alt.js
 ```
 
-Das erste Skript liest die `.docx`-Fassung des Grammatikskripts aus dem
-Ordner, in dem es aufgerufen wird, und legt die Absätze mit ihren
-Formatmerkmalen ab. Das zweite macht daraus die Kapitel. Wie aus
-`grammatik.json` dann `daten.js` wird, steht im Kopf von `build_data.py`.
+Jeder Schritt gibt einen Prüfbericht aus — Kapitelzahl, Übungen mit und ohne
+Lösung, ob die Nummern lückenlos sind, ob jedes Kapitel im Inhaltsverzeichnis
+steht. Weicht eine Zahl ab, stimmt etwas mit der neuen Fassung nicht.
 
-Die Kapitelgrenzen erkennt es an den Textmarken `_Toc_MM_001` bis
-`_Toc_MM_104` im Dokument — bleiben die erhalten, geht alles andere von
-selbst. Pinyin erkennt es an der blauen Schriftfarbe, wie das Skript sie
-durchgehend setzt.
+Woran die Skripte sich festhalten, und was deshalb erhalten bleiben muss:
+
+* **Kapiteltitel stehen zwischen `!!!` und `!!!`.** Daran werden die Kapitel
+  geschnitten.
+* **Unter dem Titel steht `HSK-Stufe/n: [HSK 3.0: HSK 1 · HSK 2]`** oder
+  `[HSK 3.0: kein eigener Grammatikpunkt – ergänzender Stoff]`. Daraus
+  entstehen Gliederung und Filter.
+* **Die Textmarken `_Toc_MM_###` bleiben, wie sie sind.** Sie sind über alle
+  Fassungen dieselben und tragen die Zuordnung alter Kapitelnummern.
+* **Pinyin steht blau.** Daran wird es von deutschem Text unterschieden.
+* Das Inhaltsverzeichnis liefert Kapitelnummer und Seitenzahl.
+
+Das Skript zählt an zwei Stellen unterschiedlich: das Inhaltsverzeichnis lässt
+den Vorspann unnummeriert (1 – 101), die Zeile „Grammatikstruktur Nr. N" zählt
+ihn mit (1 – 102). Die App folgt dem Inhaltsverzeichnis. `build_data.py` prüft,
+dass der Versatz durchgehend genau 1 beträgt, und meldet es, wenn nicht.
 
 ## Hinweise
 
 Die Beispielsätze stehen in **Pinyin**, so wie im Skript; chinesische
 Schriftzeichen kommen nur dort vor, wo auch das Skript sie nennt. Die
-Sprachfarben folgen dem Designhandbuch: Pinyin blau, Deutsch schwarz,
-Schriftzeichen rot.
+Sprachfarben folgen dem Designhandbuch v1.5: Pinyin blau `#2271FF` und eine
+Stufe größer als der deutsche Text, Schriftzeichen `#B02418` in Kaiti SC,
+deutscher Text schwarz `#111111` und nie fett — starke Hervorhebungen stehen
+kursiv. Grau `#5C5C5C` bleibt den Nebenangaben vorbehalten.
+
+Weil Kaiti SC außerhalb von macOS fehlen kann, bindet die Seite „LXGW WenKai
+TC" als Webfont ein, wie es das Handbuch für Webprojekte verlangt. Google
+Fonts liefert ihn nach Zeichenbereich aufgeteilt; von den 32 Schriftzeichen
+dieses Skripts lädt der Browser also nur wenige Kilobyte, und ohne
+Internetverbindung greift die Systemschrift.
 
 Die Bilder des gedruckten Skripts sind bewusst nicht übernommen. Es sind
 Kapitelbilder, keine Grammatikgrafiken; ohne sie lädt die Seite auch im

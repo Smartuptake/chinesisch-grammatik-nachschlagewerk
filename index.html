@@ -4,14 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grammatikstrukturen Chinesisch · Mandarin Maverick</title>
-<meta name="description" content="Interaktives Nachschlagewerk zur chinesischen Grammatik für die Jahrgangsstufen 10 bis 12 — 104 Kapitel, durchsuchbar auf Pinyin und auf Deutsch.">
+<meta name="description" content="Interaktives Nachschlagewerk zur chinesischen Grammatik für die Jahrgangsstufen 10 bis 12 — 101 Grammatikstrukturen nach HSK-Stufen geordnet, durchsuchbar auf Pinyin und auf Deutsch.">
 <meta name="author" content="Stefan Happel · Mandarin Maverick – Fast Track Chinese">
 <meta name="color-scheme" content="light">
 
 <!--
   Mandarin Maverick – Fast Track Chinese
   Grammatikstrukturen Chinesisch · Jahrgangsstufen 10 – 12
-  Nachschlagewerk zum Grammatikskript, 104 Kapitel.
+  Nachschlagewerk zum Grammatikskript, Fassung „HSK-Struktur":
+  101 Grammatikstrukturen, geordnet nach der HSK-Stufe, auf der sie zuerst
+  verlangt werden, dazu der Vorspann mit den grammatikalischen Begriffen.
 
   BEDIENUNG
     oben tippen          sucht, waehrend man schreibt
@@ -23,12 +25,13 @@
     ein Wort auf Pinyin, mit oder ohne Toene    ba · bǎ · yinwei
     ein Wort auf Deutsch                        Vergangenheit · obwohl
     einen ganzen Satz, deutsch oder Pinyin      Wǒ bǎ shū fàng zài zhuōzi shàng.
-    eine Kapitelnummer                          69
+    eine HSK-Stufe                              HSK 4
+    eine Kapitelnummer                          84
 
   AUFBAU
     index.html     diese Seite, nur das Geruest
     theme.css      das Gestaltungssystem nach MM-Designhandbuch v1.4
-    daten.js       die 104 Kapitel, erzeugt aus dem Skript — nicht von Hand aendern
+    daten.js       die Kapitel, erzeugt aus dem Skript — nicht von Hand aendern
     stichworte.js  deutsche Suchbegriffe je Kapitel — hier darf ergaenzt werden
     app.js         Suche, Wegfindung, Darstellung
 
@@ -36,6 +39,17 @@
   Deshalb liegen die Daten als JavaScript-Datei vor und nicht als JSON —
   eine JSON-Datei duerfte der Browser von der Festplatte nicht nachladen.
 -->
+
+<!-- Hanzi MUESSEN nach Designhandbuch v1.5, Kap. 4.2 in einer kalligrafischen
+     Schrift stehen. Auf macOS liegt Kaiti SC vor; fuer alle anderen Systeme
+     verlangt das Handbuch fuer Webprojekte einen Webfont und empfiehlt
+     „LXGW WenKai". Google Fonts liefert ihn in 115 Teilstuecken nach
+     Zeichenbereich — von den 32 Hanzi dieses Skripts laedt der Browser also
+     nur wenige Kilobyte, und ohne Netz greift die Systemschrift. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&display=swap">
 
 <link rel="icon" href="assets/logo/mm-logo-symbol-color.png">
 <link rel="apple-touch-icon" href="assets/logo/mm-logo-symbol-color.png">
@@ -94,7 +108,8 @@
   </p>
   <p>
     Alle Inhalte stammen aus dem Grammatikskript; die Beispielsätze stehen
-    in <span class="pinyin">Pinyin</span> wie dort.
+    in <span class="pinyin">Pinyin</span> wie dort. Gestaltung nach
+    MM-Designhandbuch v1.5.
   </p>
   <p>© Mandarin Maverick – Fast Track Chinese</p>
 </footer>

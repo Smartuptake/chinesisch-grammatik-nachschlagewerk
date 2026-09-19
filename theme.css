@@ -1,8 +1,15 @@
 /* ==========================================================================
    Mandarin Maverick – Fast Track Chinese
    theme.css · Grammatik-Nachschlagewerk
-   Tokens unveraendert aus MM_Designhandbuch v1.4, Kap. 3 (Farbe),
+   Tokens unveraendert aus MM_Designhandbuch v1.5, Kap. 3 (Farbe),
    4 (Typografie), 8 (Tabellen), 9 (Kaesten), 15.1 (Tokens).
+
+   Was v1.5 gegenueber v1.4 aendert und hier umgesetzt ist:
+     Hanzi #B02418 statt #C61919; #C61919 ist nur noch Reserve fuer S/W.
+     Deutscher Text schwarz #111111 — Grau #5C5C5C nur fuer Nebenangaben.
+     Deutscher Text nie fett; starke Hervorhebung kursiv (4.4).
+     Pinyin eine Stufe groesser als der deutsche Text derselben Ebene (4.3).
+     Hanzi in Kaiti SC; fuer das Web ist LXGW WenKai TC eingebunden (4.2).
    Das Folienraster aus Kap. 6 entfaellt — dies ist ein Dokument, keine
    Praesentation; an seine Stelle tritt ein Lesemass von 74 Zeichen.
    ========================================================================== */
@@ -17,9 +24,10 @@
   /* Sprachsemantik – nicht ueberschreiben (Kap. 3.3) */
   --mm-pinyin:           #2271FF;
   --mm-pinyin-small:     #1A5CD8;
-  --mm-hanzi:            #C61919;
-  --mm-german:           #5C5C5C;
-  --mm-german-strong:    #111111;
+  --mm-hanzi:            #B02418;  /* Hanzi, ausnahmslos (v1.5) */
+  --mm-hanzi-reserve:    #C61919;  /* nur fuer reine S/W-Kopien */
+  --mm-german:           #111111;  /* gesamter deutsche Text */
+  --mm-muted:            #5C5C5C;  /* nur Nebenangaben */
 
   /* Neutral */
   --mm-bg:               #FFFFFF;
@@ -35,8 +43,8 @@
   --mm-font-latin:   "Helvetica Neue", Helvetica, Arial, "Noto Sans", sans-serif;
   --mm-font-display: "Helvetica Neue Condensed", "Arial Narrow",
                      "Roboto Condensed", "Helvetica Neue", sans-serif;
-  --mm-font-hanzi:   "Kaiti SC", "STKaiti", "KaiTi", "Noto Serif SC",
-                     "Songti SC", serif;
+  --mm-font-hanzi:   "Kaiti SC", "STKaiti", "KaiTi", "Kaiti TC",
+                     "LXGW WenKai TC", serif;
   --mm-font-formel:  "SF Mono", "Menlo", "Consolas", monospace;
 
   /* Zeilenabstaende (Kap. 4.5) */
@@ -48,6 +56,9 @@
   --mm-mass:     74ch;    /* Lesemass des Fliesstextes */
   --mm-gutter:   24px;
   --mm-kopf-h:   auto;
+
+  /* Eine Stufe im Sinn von Kap. 4.3 — 1 pt, hier in px (Kap. 4.2). */
+  --mm-step: 1.3px;
 
   --mm-fade: 200ms;
   --mm-radius: 8px;
@@ -64,20 +75,38 @@ body {
   font-family: var(--mm-font-latin);
   font-size: 17px;
   line-height: var(--mm-lh-de);
-  color: var(--mm-german-strong);
+  color: var(--mm-german);
   -webkit-text-size-adjust: 100%;
 }
 
 /* --------------------------------------------------------------------------
    Sprachsemantik (Kap. 3.3) — gilt ausnahmslos
    -------------------------------------------------------------------------- */
-.pinyin { color: var(--mm-pinyin); }
-.hanzi  { color: var(--mm-hanzi); font-family: var(--mm-font-hanzi); }
-.de     { color: var(--mm-german-strong); }
+/* MUSS (4.3): Pinyin steht eine Stufe ueber dem deutschen Text derselben
+   Ebene. Als em-Rechnung gilt das in jedem Umfeld — im Fliesstext wie in der
+   Tabelle — ohne dass jede Stelle eine eigene Groesse braucht. */
+.pinyin {
+  color: var(--mm-pinyin);
+  font-size: calc(1em + var(--mm-step));
+  line-height: var(--mm-lh-pinyin);
+}
+.hanzi {
+  color: var(--mm-hanzi);
+  font-family: var(--mm-font-hanzi);
+  line-height: var(--mm-lh-hanzi);
+}
+.de     { color: var(--mm-german); font-weight: 400; }
+.muted  { color: var(--mm-muted); }
 
-/* Unter 16 px reicht der Kontrast von #2271FF nicht (Kap. 3.5). */
-small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
-  color: var(--mm-pinyin-small);
+/* Unter 16 px reicht der Kontrast von #2271FF nicht (Kap. 3.5). Weil Pinyin
+   nach 4.3 ohnehin eine Stufe groesser steht, greift das nur in den kleinen
+   Nebenflaechen. */
+small .pinyin, .klein .pinyin, .mm-fuss .pinyin { color: var(--mm-pinyin-small); }
+
+/* MUSS (4.4): starke Hervorhebung im deutschen Text kursiv — nie fett,
+   nie farbig, nie unterstrichen. */
+.strong, .mm-kapitel em, .mm-kapitel i {
+  font-style: italic; font-weight: 400; color: inherit;
 }
 
 /* --------------------------------------------------------------------------
@@ -107,16 +136,16 @@ small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
 .mm-marke-text { line-height: 1.15; }
 .mm-marke-text b {
   display: block; font-family: var(--mm-font-display);
-  font-size: 17px; letter-spacing: .01em; color: var(--mm-german-strong);
+  font-size: 17px; letter-spacing: .01em; color: var(--mm-german);
 }
-.mm-marke-text span { font-size: 12px; color: var(--mm-german); }
+.mm-marke-text span { font-size: 12px; color: var(--mm-muted); }
 
 .mm-suchfeld { flex: 1 1 320px; min-width: 240px; position: relative; }
 .mm-suchfeld input {
   width: 100%; font: inherit; font-size: 17px;
   padding: 11px 40px 11px 42px;
   border: 2px solid var(--mm-rule-light); border-radius: 999px;
-  background: var(--mm-bg-sunk); color: var(--mm-german-strong);
+  background: var(--mm-bg-sunk); color: var(--mm-german);
   transition: border-color var(--mm-fade), background var(--mm-fade);
 }
 .mm-suchfeld input:focus {
@@ -134,7 +163,7 @@ small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
 .mm-loeschen {
   position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
   border: 0; background: none; cursor: pointer; font-size: 20px; line-height: 1;
-  color: var(--mm-german); padding: 6px 8px; border-radius: 50%;
+  color: var(--mm-muted); padding: 6px 8px; border-radius: 50%;
 }
 .mm-loeschen:hover { color: var(--mm-bordeaux); background: var(--mm-bg-sunk); }
 
@@ -155,9 +184,9 @@ small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
 .mm-knopf--voll { background: var(--mm-turquoise); color: #fff; }
 .mm-knopf--voll:hover { background: var(--mm-turquoise-dark); color: #fff; }
 .mm-knopf--still {
-  border-color: var(--mm-rule-light); color: var(--mm-german);
+  border-color: var(--mm-rule-light); color: var(--mm-muted);
 }
-.mm-knopf--still:hover { background: var(--mm-bg-sunk); color: var(--mm-german-strong); }
+.mm-knopf--still:hover { background: var(--mm-bg-sunk); color: var(--mm-german); }
 .mm-knopf[aria-pressed="true"] {
   background: var(--mm-turquoise); color: #fff; border-color: var(--mm-turquoise);
 }
@@ -171,7 +200,7 @@ small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
 .mm-titelzeile h1 {
   font-family: var(--mm-font-display);
   font-size: clamp(26px, 4vw, 40px); line-height: 1.15;
-  margin: 0 0 6px; color: var(--mm-german-strong); letter-spacing: .005em;
+  margin: 0 0 6px; color: var(--mm-german); letter-spacing: .005em;
 }
 .mm-titelzeile p { margin: 0; color: var(--mm-german); max-width: var(--mm-mass); }
 
@@ -180,7 +209,30 @@ small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
   display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
   padding: 14px 0 18px; border-bottom: 1px solid var(--mm-rule-light);
 }
-.mm-filter-rubrik { font-size: 14px; color: var(--mm-german); margin-right: 4px; }
+.mm-filter-rubrik { font-size: 14px; color: var(--mm-muted); margin-right: 4px; }
+
+/* Textknopf, der wie ein Verweis im Fliesstext sitzt --------------------- */
+.mm-textlink {
+  font: inherit; color: var(--mm-turquoise-dark); background: none;
+  border: 0; border-bottom: 1px solid currentColor; padding: 0;
+  cursor: pointer;
+}
+.mm-textlink:hover { color: var(--mm-turquoise); }
+
+/* Hinweis auf eine verschobene Kapitelnummer ---------------------------- */
+.mm-umleitung {
+  margin: 20px 0 0; padding: 11px 15px; max-width: var(--mm-mass);
+  border: 1px solid rgba(150,27,29,.25);
+  border-left: 4px solid var(--mm-bordeaux);
+  border-radius: 0 var(--mm-radius) var(--mm-radius) 0;
+  background: #FCF6F6; font-size: 14.5px;
+}
+
+.mm-filter-hinweis {
+  margin: 16px 0 0; max-width: var(--mm-mass);
+  font-size: 14.5px; color: var(--mm-german);
+}
+.mm-filter-hinweis b { font-weight: 400; font-style: italic; }
 
 /* --------------------------------------------------------------------------
    Inhaltsverzeichnis
@@ -192,7 +244,7 @@ small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
   border-bottom: 2px solid var(--mm-turquoise-light);
   display: flex; align-items: baseline; gap: 10px;
 }
-.mm-lj-titel span { font-size: 13px; color: var(--mm-german); font-family: var(--mm-font-latin); }
+.mm-lj-titel span { font-size: 13px; color: var(--mm-muted); font-family: var(--mm-font-latin); }
 
 .mm-ivz {
   list-style: none; margin: 0; padding: 0;
@@ -215,8 +267,8 @@ small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
   flex: 0 0 2.6em; font-family: var(--mm-font-display);
   font-size: 15px; color: var(--mm-turquoise-dark); font-weight: 700;
 }
-.mm-ivz-titel { flex: 1 1 auto; color: var(--mm-german-strong); font-size: 15.5px; }
-.mm-ivz-hsk { font-size: 12px; color: var(--mm-german); white-space: nowrap; }
+.mm-ivz-titel { flex: 1 1 auto; color: var(--mm-german); font-size: 15.5px; }
+.mm-ivz-hsk { font-size: 12px; color: var(--mm-muted); white-space: nowrap; }
 
 /* --------------------------------------------------------------------------
    Suchtreffer
@@ -227,9 +279,9 @@ small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
 }
 .mm-such-kopf h2 {
   font-family: var(--mm-font-display); font-size: 22px; margin: 0;
-  color: var(--mm-german-strong);
+  color: var(--mm-german);
 }
-.mm-such-kopf .zahl { color: var(--mm-german); font-size: 15px; }
+.mm-such-kopf .zahl { color: var(--mm-muted); font-size: 15px; }
 
 .mm-treffer-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .mm-treffer {
@@ -246,9 +298,9 @@ small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
   font-family: var(--mm-font-display); font-weight: 700;
   color: var(--mm-turquoise-dark); font-size: 15px;
 }
-.mm-treffer-titel { font-size: 16.5px; color: var(--mm-german-strong); font-weight: 600; }
+.mm-treffer-titel { font-size: 16.5px; color: var(--mm-german); font-weight: 600; }
 .mm-treffer-grund {
-  font-size: 12px; color: var(--mm-german);
+  font-size: 12px; color: var(--mm-muted);
   border: 1px solid var(--mm-rule-light); border-radius: 999px; padding: 1px 9px;
 }
 .mm-treffer-zeile {
@@ -264,7 +316,7 @@ small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
   padding: 26px; text-align: center; color: var(--mm-german);
   max-width: var(--mm-mass);
 }
-.mm-leer b { color: var(--mm-german-strong); }
+.mm-leer b { font-weight: 400; font-style: italic; }
 .mm-vorschlaege { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 14px; }
 .mm-vorschlag {
   font: inherit; font-size: 14px; cursor: pointer;
@@ -282,7 +334,7 @@ small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
 .mm-kapitel-kopf h1 {
   font-family: var(--mm-font-display);
   font-size: clamp(24px, 3.4vw, 34px); line-height: 1.2;
-  margin: 4px 0 10px; color: var(--mm-german-strong);
+  margin: 4px 0 10px; color: var(--mm-german);
 }
 .mm-kapitel-nr {
   font-family: var(--mm-font-display); font-weight: 700;
@@ -295,7 +347,7 @@ small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
   background: var(--mm-turquoise-light); color: var(--mm-turquoise-dark);
   border: 1px solid rgba(3,154,154,.28);
 }
-.mm-marke-chip--hsk { background: #fff; color: var(--mm-german); border-color: var(--mm-rule-light); }
+.mm-marke-chip--hsk { background: #fff; color: var(--mm-muted); border-color: var(--mm-rule-light); }
 
 .mm-abschnitt { margin: 26px 0 0; max-width: var(--mm-mass); }
 
@@ -307,7 +359,7 @@ small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
   content: "▸"; color: var(--mm-turquoise); margin-right: 8px; font-size: 16px;
 }
 .mm-zwischentitel {
-  font-size: 17px; font-weight: 700; color: var(--mm-german-strong);
+  font-size: 17px; font-weight: 700; color: var(--mm-german);
   margin: 0 0 8px; line-height: 1.35;
 }
 .mm-zeile { margin: 0 0 7px; line-height: var(--mm-lh-de); }
@@ -365,12 +417,16 @@ small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
 }
 .mm-uebungen[open] > summary::before { content: "－"; }
 .mm-uebungen > summary:hover { background: var(--mm-turquoise-light); }
-.mm-uebungen > summary .anzahl { margin-left: auto; font-size: 13px; color: var(--mm-german); font-family: var(--mm-font-latin); }
+.mm-uebungen > summary .anzahl { margin-left: auto; font-size: 13px; color: var(--mm-muted); font-family: var(--mm-font-latin); }
 
 .mm-uebung { margin: 20px 0 0; padding-left: 4px; }
+/* Die Aufgabenstellung ist eine Arbeitsanweisung. v1.5 verbietet dafuer den
+   Fettdruck ausdruecklich; sie hebt sich stattdessen ueber die schmale
+   Auszeichnungsschrift und die tuerkise Marke ab. */
 .mm-uebung-kopf {
-  font-weight: 700; color: var(--mm-german-strong);
-  margin: 0 0 10px; font-size: 16px;
+  font-family: var(--mm-font-display); font-weight: 400;
+  color: var(--mm-german); margin: 0 0 10px; font-size: 16.5px;
+  padding-left: 11px; border-left: 3px solid var(--mm-turquoise);
 }
 .mm-aufgaben { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .mm-aufgabe {
@@ -391,7 +447,7 @@ small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
 .mm-loesung p { margin: 0 0 4px; }
 .mm-loesung p:last-child { margin-bottom: 0; }
 .mm-loesung[hidden] { display: none; }
-.mm-offen { color: var(--mm-german); font-size: 13.5px; margin: 8px 0 0; font-style: italic; }
+.mm-offen { color: var(--mm-muted); font-size: 13.5px; margin: 8px 0 0; font-style: italic; }
 
 /* Rueckweg unter jedem Kapitel ---------------------------------------- */
 .mm-rueckweg {
@@ -399,7 +455,7 @@ small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
   border-top: 1px solid var(--mm-rule-light);
   display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
 }
-.mm-rueckweg .hinweis { font-size: 13.5px; color: var(--mm-german); flex: 1 1 100%; margin: 0 0 4px; }
+.mm-rueckweg .hinweis { font-size: 13.5px; color: var(--mm-muted); flex: 1 1 100%; margin: 0 0 4px; }
 
 .mm-nachbarn {
   display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap;
@@ -408,11 +464,11 @@ small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
 .mm-nachbar {
   font: inherit; font-size: 14px; cursor: pointer; text-align: left;
   border: 1px solid var(--mm-rule-light); border-radius: var(--mm-radius);
-  background: #fff; padding: 9px 14px; color: var(--mm-german-strong);
+  background: #fff; padding: 9px 14px; color: var(--mm-german);
   max-width: 48%; flex: 1 1 auto;
 }
 .mm-nachbar:hover { border-color: var(--mm-turquoise); background: var(--mm-turquoise-light); }
-.mm-nachbar span { display: block; font-size: 12px; color: var(--mm-german); }
+.mm-nachbar span { display: block; font-size: 12px; color: var(--mm-muted); }
 .mm-nachbar--weiter { text-align: right; }
 
 /* --------------------------------------------------------------------------
@@ -421,7 +477,7 @@ small .pinyin, .klein .pinyin, .mm-treffer .pinyin, .mm-fuss .pinyin {
 .mm-fuss {
   border-top: 1px solid var(--mm-rule-light);
   margin-top: 60px; padding: 22px var(--mm-gutter) 40px;
-  font-size: 13px; color: var(--mm-german);
+  font-size: 13px; color: var(--mm-muted);
   text-align: center;
 }
 .mm-fuss a { color: var(--mm-turquoise-dark); }

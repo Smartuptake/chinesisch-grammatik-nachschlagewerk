@@ -2,12 +2,22 @@
    Mandarin Maverick – Fast Track Chinese
    app.js · Grammatik-Nachschlagewerk
 
-   Drei Ansichten, die ueber die Adresszeile auseinandergehalten werden:
+   Vier Ansichten, die ueber die Adresszeile auseinandergehalten werden:
      #/                  Inhaltsverzeichnis
      #/suche/<Eingabe>   Trefferliste
-     #/kapitel/<Nr>      ein Kapitel
+     #/kapitel/<Nr>      ein Kapitel   (Nr. 0 = Vorspann)
+     #/hsk               wie die HSK-Angabe zu lesen ist
    Weil jede Ansicht eine eigene Adresse hat, arbeitet der Zurueck-Knopf des
    Browsers wie erwartet, und jedes Kapitel laesst sich einzeln verlinken.
+
+   DIE ORDNUNG
+   Das Skript ordnet die 101 Grammatikstrukturen nach der niedrigsten
+   HSK-Stufe, auf der sie verlangt werden — das ist `einstieg`. Danach
+   gliedert auch das Verzeichnis. Viele Kapitel nennen daneben weitere
+   Stufen, weil der HSK dasselbe Thema ueber mehrere Pruefungsstufen
+   verteilt, das Skript es aber an einer Stelle vollstaendig behandelt.
+   Der Stufenfilter sucht deshalb in `hsk`, nicht in `einstieg`: wer auf
+   HSK 4 lernt, findet auch die HSK-4-Erweiterung eines HSK-1-Kapitels.
 
    DIE SUCHE
    Sie kennt drei Eingaben, ohne dass man ihr sagen muesste, welche es ist:
@@ -25,8 +35,12 @@
 (function () {
 'use strict';
 
-const KAP = window.MM_GRAMMATIK || [];
-const STICH = window.MM_STICHWORTE || {};
+const D        = window.MM_GRAMMATIK || {};
+const KAP      = D.kapitel  || [];
+const VORWORT  = D.vorwort  || [];
+const UML      = D.umleitung || {};   /* alte Kapitelnummer -> neue */
+const ALTTITEL = D.altTitel  || {};
+const STICH    = window.MM_STICHWORTE || {};
 
 /* --------------------------------------------------------------------------
    1  Normalisierung
@@ -85,7 +99,7 @@ KAP.forEach((k, i) => {
   const map = new Map();
   eintragen(map, k.titel, GEWICHT.titel);
   eintragen(map, STICH[k.nr] || '', GEWICHT.stichwort);
-  eintragen(map, k.hsk || '', GEWICHT.hsk);
+  eintragen(map, (k.hsk || []).map(n => 'hsk ' + n).join(' '), GEWICHT.hsk);
 
   for (const a of k.abschnitte) {
     if (a.typ === 'formel') {
@@ -170,7 +184,6 @@ function suche(eingabe) {
   const roh = woerter(eingabe);
   if (!roh.length) return [];
 
-  /* Jedes Eingabewort mit seinen Schreibvarianten und seinem Gewicht */
   const satz = roh.length >= 3;
   const begriffe = roh.map(function (w) {
     const keys = schluessel(w);
@@ -267,11 +280,15 @@ function esc(s) {
                   .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-/* Runs einer Zeile: Pinyin blau, Deutsch schwarz (Designhandbuch 3.3) */
+/* Runs einer Zeile. Die Sprachsemantik des Designhandbuchs (3.3) gilt
+   ausnahmslos: 0 = Deutsch schwarz, 1 = Pinyin blau und eine Stufe groesser,
+   2 = Hanzi in #B02418 und Kaiti SC. */
 function runsHtml(runs, marken) {
   return runs.map(r => {
     const t = marken ? markieren(r[0], marken) : esc(r[0]);
-    return r[1] ? '<span class="pinyin">' + t + '</span>' : t;
+    if (r[1] === 1) return '<span class="pinyin">' + t + '</span>';
+    if (r[1] === 2) return '<span class="hanzi">' + t + '</span>';
+    return t;
   }).join('');
 }
 
@@ -283,10 +300,8 @@ function markieren(text, begriffe) {
   const re = /[\p{L}\p{N}]+/gu;
   let m, letzte = 0;
   while ((m = re.exec(text)) !== null) {
-    const wort = m[0].toLowerCase();
-    const keys = schluessel(wort);
-    const treffer = begriffe.some(b => b.keys.some(k => keys.indexOf(k) >= 0));
-    if (treffer) {
+    const keys = schluessel(m[0].toLowerCase());
+    if (begriffe.some(b => b.keys.some(k => keys.indexOf(k) >= 0))) {
       teile.push([text.slice(letzte, m.index), false]);
       teile.push([m[0], true]);
       letzte = m.index + m[0].length;
@@ -299,72 +314,85 @@ function markieren(text, begriffe) {
   return out;
 }
 
-/* „HSK 3.0: HSK 1 (一-14) · HSK 3 (三-05)" → „HSK 1–3"
-   Das vorangestellte „HSK 3.0:" nennt die Fassung des Rahmenwerks, nicht
-   eine Stufe — es muss weg, bevor gezaehlt wird. */
-function hskKurz(hsk) {
-  const stufen = (hsk.replace(/^HSK\s*3\.0\s*:/, '').match(/HSK\s*([1-9])/g) || [])
-    .map(s => parseInt(s.replace(/\D/g, ''), 10))
-    .filter(n => n >= 1 && n <= 9);
-  const uniq = Array.from(new Set(stufen)).sort((a, b) => a - b);
-  if (!uniq.length) return '';
-  return uniq.length === 1 ? 'HSK ' + uniq[0]
-                           : 'HSK ' + uniq[0] + '–' + uniq[uniq.length - 1];
+/* --- HSK-Beschriftungen ------------------------------------------------ */
+
+function hskListe(k) {
+  if (k.ergaenzend) return 'ergänzender Stoff';
+  if (!k.hsk || !k.hsk.length) return '';
+  return 'HSK ' + k.hsk.join(' · ');
 }
 
-/* „1./2" → „1./2." — das Skript schreibt die letzte Ziffer ohne Punkt. */
-function ljZahl(lj) {
-  return lj ? lj.split('/').map(t => t.replace(/\.$/, '') + '.').join('/') : '';
+function stufeLabel(stufe) {
+  return stufe === 0 ? 'Ergänzender Stoff' : 'HSK ' + stufe;
 }
-function ljLabel(lj) {
-  return lj ? ljZahl(lj) + ' Lernjahr' : '';
+
+function kapitelMarke(k) {
+  return k.nr ? 'Kapitel ' + k.nr : 'Vorspann';
 }
 
 /* --- Inhaltsverzeichnis ------------------------------------------------ */
 
-let filterLj = '';
+let filterStufe = 0;   /* 0 = kein Filter */
 
 function zeigeVerzeichnis() {
+  /* Gruppen in der Reihenfolge des Skripts: HSK 1, 2, 3 … , am Ende der
+     ergaenzende Stoff, der im HSK keinen eigenen Punkt hat. */
   const gruppen = new Map();
   for (const k of KAP) {
-    const g = k.lj || '–';
+    const g = k.ergaenzend ? 0 : k.einstieg;
     if (!gruppen.has(g)) gruppen.set(g, []);
     gruppen.get(g).push(k);
   }
-  const reihen = Array.from(gruppen.keys()).sort((a, b) => {
-    const f = s => s === '–' ? 99 : parseFloat(s.split('/')[0]);
-    return f(a) - f(b) || a.localeCompare(b);
-  });
+  const reihen = Array.from(gruppen.keys())
+    .sort((a, b) => (a === 0 ? 99 : a) - (b === 0 ? 99 : b));
 
-  const alleLj = reihen.filter(r => r !== '–');
+  /* Welche Stufen kommen irgendwo vor? Danach richtet sich die Filterleiste. */
+  const alleStufen = new Set();
+  for (const k of KAP) for (const s of (k.hsk || [])) alleStufen.add(s);
+  const stufen = Array.from(alleStufen).sort((a, b) => a - b);
+
+  const zahl = KAP.filter(k => k.nr).length;
 
   let h = '<div class="mm-titelzeile">' +
     '<h1>Grammatikstrukturen Chinesisch</h1>' +
     '<p>Das Nachschlagewerk zum Grammatikskript der Jahrgangsstufen 10 – 12. ' +
-    KAP.length + ' Kapitel. Oben suchen — nach einem Wort auf Pinyin oder Deutsch, ' +
-    'oder gleich mit einem ganzen Satz.</p></div>';
+    zahl + ' Grammatikstrukturen, geordnet nach der HSK-Stufe, auf der sie ' +
+    'zuerst verlangt werden. Oben suchen — nach einem Wort auf Pinyin oder ' +
+    'Deutsch, oder gleich mit einem ganzen Satz. ' +
+    '<button class="mm-textlink" data-hsk="1">Wie die HSK-Angabe zu lesen ist</button>' +
+    '</p></div>';
 
-  h += '<div class="mm-filter"><span class="mm-filter-rubrik">Lernjahr:</span>' +
-    '<button class="mm-knopf mm-knopf--still" data-lj="" aria-pressed="' +
-    (filterLj === '') + '">alle</button>';
-  for (const lj of alleLj) {
-    h += '<button class="mm-knopf mm-knopf--still" data-lj="' + esc(lj) +
-      '" aria-pressed="' + (filterLj === lj) + '" title="' + esc(ljLabel(lj)) +
-      '">' + esc(ljZahl(lj)) + '</button>';
+  h += '<div class="mm-filter"><span class="mm-filter-rubrik">HSK-Stufe:</span>' +
+    '<button class="mm-knopf mm-knopf--still" data-stufe="0" aria-pressed="' +
+    (filterStufe === 0) + '">alle</button>';
+  for (const s of stufen) {
+    h += '<button class="mm-knopf mm-knopf--still" data-stufe="' + s +
+      '" aria-pressed="' + (filterStufe === s) + '">HSK ' + s + '</button>';
   }
   h += '</div>';
 
+  if (filterStufe) {
+    const treffer = KAP.filter(k => (k.hsk || []).indexOf(filterStufe) >= 0);
+    const spaeter = treffer.filter(k => k.einstieg !== filterStufe).length;
+    h += '<p class="mm-filter-hinweis">' +
+      treffer.length + ' Kapitel nennen <b>HSK ' + filterStufe + '</b>' +
+      (spaeter ? ' — davon ' + spaeter + ', die weiter vorn stehen und den ' +
+                 'Stoff dort schon mitnehmen.' : '.') +
+      '</p>';
+  }
+
   for (const g of reihen) {
-    if (filterLj && g !== filterLj) continue;
-    const liste = gruppen.get(g);
-    h += '<h2 class="mm-lj-titel">' +
-      (g === '–' ? 'Ohne Zuordnung' : esc(ljLabel(g))) +
-      '<span>' + liste.length + ' Kapitel</span></h2><ul class="mm-ivz">';
+    const liste = gruppen.get(g)
+      .filter(k => !filterStufe || (k.hsk || []).indexOf(filterStufe) >= 0);
+    if (!liste.length) continue;
+    h += '<h2 class="mm-lj-titel">' + esc(stufeLabel(g)) +
+      '<span>' + liste.length +
+      (liste.length === 1 ? ' Kapitel' : ' Kapitel') + '</span></h2><ul class="mm-ivz">';
     for (const k of liste) {
       h += '<li><button class="mm-ivz-eintrag" data-kap="' + k.nr + '">' +
-        '<span class="mm-ivz-nr">' + k.nr + '.</span>' +
+        '<span class="mm-ivz-nr">' + (k.nr ? k.nr + '.' : '§') + '</span>' +
         '<span class="mm-ivz-titel">' + esc(k.titel) + '</span>' +
-        (k.hsk ? '<span class="mm-ivz-hsk">' + esc(hskKurz(k.hsk)) + '</span>' : '') +
+        '<span class="mm-ivz-hsk">' + esc(hskListe(k)) + '</span>' +
         '</button></li>';
     }
     h += '</ul>';
@@ -373,19 +401,48 @@ function zeigeVerzeichnis() {
   document.title = 'Grammatikstrukturen Chinesisch · Mandarin Maverick';
 }
 
+/* --- Wie die HSK-Angabe zu lesen ist ----------------------------------- */
+
+function zeigeHskHilfe() {
+  let h = '<article class="mm-kapitel"><div class="mm-kapitel-kopf">' +
+    '<div class="mm-kapitel-nr">Zur Ordnung dieses Werks</div>' +
+    '<h1>Wie die HSK-Angabe zu lesen ist</h1></div>' +
+    '<section class="mm-abschnitt">';
+  for (const z of VORWORT) {
+    h += '<p class="mm-zeile ' + z.l + '">' + runsHtml(z.r, null) + '</p>';
+  }
+  h += '</section><div class="mm-rueckweg">' +
+    '<p class="hinweis">Weiter:</p>' +
+    '<button class="mm-knopf mm-knopf--voll" data-neu="1">Neue Suche</button>' +
+    '<button class="mm-knopf" data-heim="1">☰ Inhaltsverzeichnis</button>' +
+    '</div></article>';
+  app.innerHTML = h;
+  document.title = 'Wie die HSK-Angabe zu lesen ist · Grammatik Chinesisch';
+}
+
 /* --- Trefferliste ------------------------------------------------------ */
 
 const BEISPIELE = ['le', 'bǎ', 'Vergangenheit', 'obwohl', 'Verneinung',
                    'wie lange', 'Wǒ bǎ shū fàng zài zhuōzi shàng.'];
 
+/* „HSK 4" ist keine Frage nach einem Kapitel, sondern nach einer Stufe.
+   Die Eingabe fuehrt deshalb auf das gefilterte Verzeichnis. */
+const NUR_HSK = /^\s*hsk\s*([1-9])\s*$/i;
+
 function zeigeTreffer(frage) {
+  const stufe = NUR_HSK.exec(frage);
+  if (stufe) {
+    filterStufe = +stufe[1];
+    zeigeVerzeichnis();
+    document.title = 'HSK ' + stufe[1] + ' · Grammatik Chinesisch';
+    return;
+  }
   const begriffe = woerter(frage).map(w => ({ wort: w, keys: schluessel(w) }));
   const ergebnis = suche(frage);
 
   let h = '<div class="mm-such-kopf"><h2>Suche nach „' + esc(frage) + '"</h2>' +
-    '<span class="zahl">' + (ergebnis.length
-      ? ergebnis.length + (ergebnis.length === 1 ? ' Kapitel' : ' Kapitel')
-      : 'kein Treffer') + '</span>' +
+    '<span class="zahl">' + (ergebnis.length ? ergebnis.length + ' Kapitel'
+                                             : 'kein Treffer') + '</span>' +
     '<button class="mm-knopf mm-knopf--still" data-heim="1">☰ Inhaltsverzeichnis</button>' +
     '</div>';
 
@@ -408,10 +465,10 @@ function zeigeTreffer(frage) {
     h += '<li><button class="mm-treffer" data-kap="' + k.nr +
       '" data-frage="' + esc(frage) + '">' +
       '<span class="mm-treffer-kopf">' +
-      '<span class="mm-treffer-nr">Kapitel ' + k.nr + '</span>' +
+      '<span class="mm-treffer-nr">' + esc(kapitelMarke(k)) + '</span>' +
       '<span class="mm-treffer-titel">' + markieren(k.titel, begriffe) + '</span>' +
       (rang === 0 ? '<span class="mm-treffer-grund">bester Treffer</span>' : '') +
-      (k.lj ? '<span class="mm-treffer-grund">' + esc(ljLabel(k.lj)) + '</span>' : '') +
+      '<span class="mm-treffer-grund">' + esc(hskListe(k)) + '</span>' +
       '</span>';
     if (beleg) {
       h += '<p class="mm-treffer-zeile"><em>' + esc(beleg[1]) + ':</em> ' +
@@ -428,10 +485,10 @@ function zeigeTreffer(frage) {
 function kuerzen(text, begriffe, max) {
   max = max || 190;
   if (text.length <= max) return text;
-  const tief = text.toLowerCase();
+  const tief = entton(text.toLowerCase());
   let pos = -1;
   for (const b of begriffe) {
-    const p = entton(tief).indexOf(b.keys[0]);
+    const p = tief.indexOf(b.keys[0]);
     if (p >= 0 && (pos < 0 || p < pos)) pos = p;
   }
   if (pos < 0) return text.slice(0, max) + ' …';
@@ -447,12 +504,30 @@ function zeigeKapitel(nr, frage) {
   const begriffe = frage
     ? woerter(frage).map(w => ({ wort: w, keys: schluessel(w) })) : null;
 
-  let h = '<article class="mm-kapitel"><div class="mm-kapitel-kopf">' +
-    '<div class="mm-kapitel-nr">Kapitel ' + k.nr + ' von ' + KAP.length + '</div>' +
+  let h = '<article class="mm-kapitel">';
+
+  /* Die Kapitelnummern haben sich mit der Fassung „HSK-Struktur" verschoben.
+     Still umleiten laesst sich das nicht — alte und neue Nummern laufen beide
+     von 1 bis 101, eine Adresse traegt kein Merkmal, aus welcher Fassung sie
+     stammt. Stattdessen dieser Hinweis: er nennt, was frueher unter dieser
+     Nummer stand, und fuehrt mit einem Klick dorthin. */
+  const ziel = UML[nr];
+  if (ziel && ziel !== nr && ALTTITEL[nr]) {
+    h += '<div class="mm-umleitung">Nach der vorigen Fassung des Skripts stand ' +
+      'unter Nr. ' + nr + ': <i>' + esc(ALTTITEL[nr]) + '</i> — das ist jetzt ' +
+      '<button class="mm-textlink" data-kap="' + ziel + '">Kapitel ' + ziel +
+      '</button>.</div>';
+  }
+
+  h += '<div class="mm-kapitel-kopf">' +
+    '<div class="mm-kapitel-nr">' + esc(kapitelMarke(k)) +
+    (k.nr ? ' von ' + KAP.filter(x => x.nr).length : '') + '</div>' +
     '<h1>' + markieren(k.titel, begriffe) + '</h1><div class="mm-marken">';
-  if (k.lj) h += '<span class="mm-marke-chip">' + esc(ljLabel(k.lj)) + '</span>';
-  if (k.hsk) h += '<span class="mm-marke-chip mm-marke-chip--hsk">' +
-    esc(k.hsk.replace(/^HSK 3\.0:\s*/, 'HSK 3.0 · ')) + '</span>';
+  if (k.ergaenzend) {
+    h += '<span class="mm-marke-chip">ergänzender Stoff</span>';
+  } else if (k.hsk && k.hsk.length) {
+    h += '<span class="mm-marke-chip">' + esc(hskListe(k)) + '</span>';
+  }
   if (k.seite) h += '<span class="mm-marke-chip mm-marke-chip--hsk">Skript S. ' +
     k.seite + '</span>';
   h += '</div></div>';
@@ -533,8 +608,10 @@ function zeigeKapitel(nr, frage) {
       '">zurück zu „' + esc(frage) + '"</button>' : '') +
     '</div>';
 
-  const vor = KAP.find(x => x.nr === nr - 1);
-  const nach = KAP.find(x => x.nr === nr + 1);
+  const folge = KAP.filter(x => x.nr);
+  const pos = folge.findIndex(x => x.nr === nr);
+  const vor = pos > 0 ? folge[pos - 1] : null;
+  const nach = pos >= 0 && pos < folge.length - 1 ? folge[pos + 1] : null;
   h += '<div class="mm-nachbarn">';
   h += vor ? '<button class="mm-nachbar" data-kap="' + vor.nr +
     '"><span>← Kapitel ' + vor.nr + '</span>' + esc(vor.titel) + '</button>' : '<span></span>';
@@ -543,7 +620,7 @@ function zeigeKapitel(nr, frage) {
   h += '</div></article>';
 
   app.innerHTML = h;
-  document.title = k.nr + '. ' + k.titel + ' · Grammatik Chinesisch';
+  document.title = kapitelMarke(k) + ': ' + k.titel + ' · Grammatik Chinesisch';
 
   /* Zur ersten Fundstelle rollen, wenn man aus der Suche kommt */
   if (begriffe) {
@@ -559,25 +636,24 @@ function zeigeKapitel(nr, frage) {
    6  Wegfindung
    -------------------------------------------------------------------------- */
 
-let letzteFrage = '';
-
 function route() {
   const h = decodeURIComponent(location.hash.replace(/^#/, ''));
   if (h.indexOf('/kapitel/') === 0) {
     const teile = h.slice(9).split('?');
     const nr = parseInt(teile[0], 10);
     const frage = teile[1] ? teile[1].replace(/^q=/, '') : '';
-    if (frage) { letzteFrage = frage; feld.value = frage; }
-    zeigeKapitel(nr, frage);
+    if (frage) feld.value = frage;
+    zeigeKapitel(isNaN(nr) ? -1 : nr, frage);
     if (!frage) window.scrollTo({ top: 0, behavior: 'auto' });
   } else if (h.indexOf('/suche/') === 0) {
     const frage = h.slice(7);
-    letzteFrage = frage;
     if (feld.value !== frage) feld.value = frage;
     zeigeTreffer(frage);
     window.scrollTo({ top: 0, behavior: 'auto' });
+  } else if (h.indexOf('/hsk') === 0) {
+    zeigeHskHilfe();
+    window.scrollTo({ top: 0, behavior: 'auto' });
   } else {
-    letzteFrage = '';
     zeigeVerzeichnis();
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
@@ -629,7 +705,7 @@ loeschen.addEventListener('click', function () {
 
 document.addEventListener('click', function (e) {
   const z = e.target.closest('[data-kap], [data-heim], [data-frage], [data-neu],' +
-                             ' [data-loesung], [data-lj]');
+                             ' [data-loesung], [data-stufe], [data-hsk]');
   if (!z) return;
 
   if (z.hasAttribute('data-loesung')) {
@@ -640,11 +716,12 @@ document.addEventListener('click', function (e) {
     z.textContent = offen ? 'Lösung zeigen' : 'Lösung verbergen';
     return;
   }
-  if (z.hasAttribute('data-lj')) {
-    filterLj = z.getAttribute('data-lj');
+  if (z.hasAttribute('data-stufe')) {
+    filterStufe = +z.getAttribute('data-stufe');
     zeigeVerzeichnis();
     return;
   }
+  if (z.hasAttribute('data-hsk')) { location.hash = '#/hsk'; return; }
   if (z.hasAttribute('data-neu')) {
     feld.focus(); feld.select();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -666,9 +743,7 @@ document.addEventListener('keydown', function (e) {
   if (e.target === feld || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.key === '/' || e.key === 's' || e.key === 'S') {
     e.preventDefault(); feld.focus(); feld.select();
-  } else if (e.key === 'Escape') {
-    geheHeim();
-  } else if (e.key === 'i' || e.key === 'I') {
+  } else if (e.key === 'Escape' || e.key === 'i' || e.key === 'I') {
     geheHeim();
   }
 });

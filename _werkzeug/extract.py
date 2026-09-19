@@ -6,7 +6,9 @@ from xml.etree import ElementTree as ET
 W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
 def q(t): return '{%s}%s' % (W, t)
 
-DOC = 'Grammatikskript-Jgst-10-12-erweitert.docx'
+# Erstes Argument: die .docx-Fassung des Skripts. Zweites: wohin die Bloecke.
+DOC = sys.argv[1]
+ZIEL = sys.argv[2] if len(sys.argv) > 2 else 'blocks.json'
 
 z = zipfile.ZipFile(DOC)
 root = ET.fromstring(z.read('word/document.xml'))
@@ -91,7 +93,6 @@ for el in body:
         ti['bm'] = [b for b in bms if b and b.startswith('_Toc_MM_')]
         blocks.append(ti)
 
-json.dump(blocks, open(sys.argv[1] if len(sys.argv) > 1 else 'blocks.json', 'w'),
-          ensure_ascii=False)
+json.dump(blocks, open(ZIEL, 'w'), ensure_ascii=False)
 print('blocks:', len(blocks))
 print('mit bookmark:', sum(1 for b in blocks if b.get('bm')))
