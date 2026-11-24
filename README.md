@@ -1,8 +1,9 @@
 # Grammatikstrukturen Chinesisch · Jahrgangsstufen 10 – 12
 
 Das interaktive Nachschlagewerk zum Grammatikskript von
-**Mandarin Maverick – Fast Track Chinese**. 101 Grammatikstrukturen, geordnet
-nach HSK-Stufen, durchsuchbar auf Pinyin und auf Deutsch bis hin zum ganzen
+**Mandarin Maverick – Fast Track Chinese**. 112 Grammatikstrukturen (1–101 und die
+Buchstaben-Kapitel 42a–e, 82a–c, 92a–c), geordnet
+nach HSK-Stufen (HSK-Prüfungsplan 2025), durchsuchbar auf Pinyin und auf Deutsch bis hin zum ganzen
 Satz.
 
 © 2026 Mandarin Maverick · Stefan Happel · Alle Rechte vorbehalten
@@ -113,7 +114,17 @@ Hand sollte man es nicht anfassen:
 python3 _werkzeug/extract.py ../Grammatikskript-Jgst-10-12-HSK-Struktur_1.docx .bau/blocks.json
 python3 _werkzeug/build_data.py .bau/blocks.json .bau/grammatik.json
 python3 _werkzeug/schreibe_daten.py .bau/grammatik.json daten.js .bau/daten_alt.js
+python3 _werkzeug/hsk2025.py daten.js ../HSK2025-Abgleich-Grammatikskript.xlsx
 ```
+
+Seit 25.11.2026 nennt die HSK-Zeile im Skript selbst die Stufen nach dem
+**HSK-Prüfungsplan 2025** (CLEC); Gliederung und Filter kommen direkt daraus.
+Der letzte Schritt ergänzt je Kapitel die Grammatikpunkte von 2025 mit Code
+(2-21 …) aus der je Kapitel geprüften Zuordnung
+(`~/Documents/MM-Werkstatt/grammatik-etappe2/hsk2025/ergebnis/zuordnung.json`)
+und die alten Stufen nach GF 0025—2021 (`hsk2021`, aus der Abgleich-Tabelle,
+die er nur liest). Er meldet, wenn die Stufen der Codes nicht zur HSK-Zeile
+im Skript passen.
 
 Jeder Schritt gibt einen Prüfbericht aus — Kapitelzahl, Übungen mit und ohne
 Lösung, ob die Nummern lückenlos sind, ob jedes Kapitel im Inhaltsverzeichnis
@@ -124,17 +135,19 @@ Woran die Skripte sich festhalten, und was deshalb erhalten bleiben muss:
 * **Kapiteltitel stehen zwischen `!!!` und `!!!`.** Daran werden die Kapitel
   geschnitten.
 * **Unter dem Titel steht `HSK-Stufe/n: [HSK 3.0: HSK 1 · HSK 2]`** oder
-  `[HSK 3.0: kein eigener Grammatikpunkt – ergänzender Stoff]`. Daraus
-  entstehen Gliederung und Filter.
+  `[HSK 3.0: kein eigener Grammatikpunkt – ergänzender Stoff]` (Stufen nach
+  dem Prüfungsplan 2025).
 * **Die Textmarken `_Toc_MM_###` bleiben, wie sie sind.** Sie sind über alle
   Fassungen dieselben und tragen die Zuordnung alter Kapitelnummern.
 * **Pinyin steht blau.** Daran wird es von deutschem Text unterschieden.
 * Das Inhaltsverzeichnis liefert Kapitelnummer und Seitenzahl.
 
 Das Skript zählt an zwei Stellen unterschiedlich: das Inhaltsverzeichnis lässt
-den Vorspann unnummeriert (1 – 101), die Zeile „Grammatikstruktur Nr. N" zählt
-ihn mit (1 – 102). Die App folgt dem Inhaltsverzeichnis. `build_data.py` prüft,
-dass der Versatz durchgehend genau 1 beträgt, und meldet es, wenn nicht.
+den Vorspann unnummeriert; die Zeile „Grammatikstruktur Nr. N" steht vor dem
+Titel und landet beim Schneiden im vorigen Kapitel. Die App folgt dem
+Inhaltsverzeichnis; `build_data.py` prüft, dass jede Kopfnummer die des
+nächsten Kapitels ist. Buchstaben-Kapitel (42a …) sind Text, alle anderen
+Zahlen; in der App sind alle Nummern Text, der Vorspann ist 0.
 
 ## Hinweise
 

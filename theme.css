@@ -530,3 +530,11 @@ small .pinyin, .klein .pinyin, .mm-fuss .pinyin { color: var(--mm-pinyin-small);
   .mm-abschnitt, .mm-uebung { break-inside: avoid; }
   a[href]::after { content: ""; }
 }
+
+/* Grammatikpunkte des HSK-Prüfungsplans 2025 unter dem Kapitelkopf */
+.mm-codes { margin: 2mm 0 0; font-size: .9em; color: var(--mm-muted); }
+.mm-codes summary { cursor: pointer; }
+.mm-codes ul { margin: 1.5mm 0 0; padding-left: 1.2em; }
+.mm-codes li { margin: .5mm 0; }
+.mm-codes b { color: #039A9A; font-weight: 600; }
+.mm-hsk2025 { border-left: 3px solid #039A9A; padding-left: 3mm; }

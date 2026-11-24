@@ -42,6 +42,14 @@ const UML      = D.umleitung || {};   /* alte Kapitelnummer -> neue */
 const ALTTITEL = D.altTitel  || {};
 const STICH    = window.MM_STICHWORTE || {};
 
+/* Kapitelnummern als Text: seit 25.11.2026 gibt es Buchstaben-Kapitel (42a–e,
+   82a–c, 92a–c). Der Vorspann bleibt 0. */
+function nrSchluessel(s) {
+  s = String(s).trim().toLowerCase();
+  return s === '0' ? 0 : s;
+}
+KAP.forEach(k => { if (k.nr !== 0) k.nr = String(k.nr); });
+
 /* --------------------------------------------------------------------------
    1  Normalisierung
    Toene, Umlaute und Satzzeichen fallen weg. Weil „zähl…" und „zaehl…"
@@ -222,7 +230,7 @@ function suche(eingabe) {
     treffer.push({ i: i, punkte: punkte, deckung: deckung });
   }
 
-  treffer.sort((a, b) => b.punkte - a.punkte || KAP[a.i].nr - KAP[b.i].nr);
+  treffer.sort((a, b) => b.punkte - a.punkte || a.i - b.i);
 
   /* Ausreisser nach unten abschneiden: was weniger als vier Prozent des
      besten Treffers holt, ist Rauschen und stiftet nur Verwirrung. */
@@ -316,14 +324,18 @@ function markieren(text, begriffe) {
 
 /* --- HSK-Beschriftungen ------------------------------------------------ */
 
+/* Stufen nach dem HSK-Prüfungsplan 2025 (CLEC); 7 steht für die
+   gemeinsame Oberstufe 7–9. */
+function stufeName(s) { return s === 7 ? '7–9' : String(s); }
+
 function hskListe(k) {
   if (k.ergaenzend) return 'ergänzender Stoff';
   if (!k.hsk || !k.hsk.length) return '';
-  return 'HSK ' + k.hsk.join(' · ');
+  return 'HSK ' + k.hsk.map(stufeName).join(' · ');
 }
 
 function stufeLabel(stufe) {
-  return stufe === 0 ? 'Ergänzender Stoff' : 'HSK ' + stufe;
+  return stufe === 0 ? 'Ergänzender Stoff' : 'HSK ' + stufeName(stufe);
 }
 
 function kapitelMarke(k) {
@@ -357,7 +369,7 @@ function zeigeVerzeichnis() {
     '<h1>Grammatikstrukturen Chinesisch</h1>' +
     '<p>Das Nachschlagewerk zum Grammatikskript der Jahrgangsstufen 10 – 12. ' +
     zahl + ' Grammatikstrukturen, geordnet nach der HSK-Stufe, auf der sie ' +
-    'zuerst verlangt werden. Oben suchen — nach einem Wort auf Pinyin oder ' +
+    'zuerst verlangt werden (HSK-Prüfungsplan 2025). Oben suchen — nach einem Wort auf Pinyin oder ' +
     'Deutsch, oder gleich mit einem ganzen Satz. ' +
     '<button class="mm-textlink" data-hsk="1">Wie die HSK-Angabe zu lesen ist</button>' +
     '</p></div>';
@@ -367,7 +379,7 @@ function zeigeVerzeichnis() {
     (filterStufe === 0) + '">alle</button>';
   for (const s of stufen) {
     h += '<button class="mm-knopf mm-knopf--still" data-stufe="' + s +
-      '" aria-pressed="' + (filterStufe === s) + '">HSK ' + s + '</button>';
+      '" aria-pressed="' + (filterStufe === s) + '">HSK ' + stufeName(s) + '</button>';
   }
   h += '</div>';
 
@@ -375,7 +387,7 @@ function zeigeVerzeichnis() {
     const treffer = KAP.filter(k => (k.hsk || []).indexOf(filterStufe) >= 0);
     const spaeter = treffer.filter(k => k.einstieg !== filterStufe).length;
     h += '<p class="mm-filter-hinweis">' +
-      treffer.length + ' Kapitel nennen <b>HSK ' + filterStufe + '</b>' +
+      treffer.length + ' Kapitel nennen <b>HSK ' + stufeName(filterStufe) + '</b>' +
       (spaeter ? ' — davon ' + spaeter + ', die weiter vorn stehen und den ' +
                  'Stoff dort schon mitnehmen.' : '.') +
       '</p>';
@@ -407,7 +419,13 @@ function zeigeHskHilfe() {
   let h = '<article class="mm-kapitel"><div class="mm-kapitel-kopf">' +
     '<div class="mm-kapitel-nr">Zur Ordnung dieses Werks</div>' +
     '<h1>Wie die HSK-Angabe zu lesen ist</h1></div>' +
-    '<section class="mm-abschnitt">';
+    '<section class="mm-abschnitt">' +
+    '<p class="mm-zeile de mm-hsk2025"><b>Stand 24.11.2026:</b> Die HSK-Stufen in diesem ' +
+    'Nachschlagewerk richten sich nach dem <b>HSK-Prüfungsplan 2025</b> (CLEC), der ' +
+    'seit 2026 für die HSK-Prüfung gilt. Unter jedem Kapitel stehen die Grammatikpunkte ' +
+    'des Prüfungsplans mit Code (z. B. 2-21). Das gedruckte Skript nennt in seiner ' +
+    'HSK-Zeile noch die Stufen des Standards von 2021 (GF 0025—2021); die folgende ' +
+    'Vorbemerkung stammt aus dem Skript und gilt sinngemäß weiter.</p>';
   for (const z of VORWORT) {
     h += '<p class="mm-zeile ' + z.l + '">' + runsHtml(z.r, null) + '</p>';
   }
@@ -512,7 +530,7 @@ function zeigeKapitel(nr, frage) {
      stammt. Stattdessen dieser Hinweis: er nennt, was frueher unter dieser
      Nummer stand, und fuehrt mit einem Klick dorthin. */
   const ziel = UML[nr];
-  if (ziel && ziel !== nr && ALTTITEL[nr]) {
+  if (ziel && String(ziel) !== nr && ALTTITEL[nr]) {
     h += '<div class="mm-umleitung">Nach der vorigen Fassung des Skripts stand ' +
       'unter Nr. ' + nr + ': <i>' + esc(ALTTITEL[nr]) + '</i> — das ist jetzt ' +
       '<button class="mm-textlink" data-kap="' + ziel + '">Kapitel ' + ziel +
@@ -520,7 +538,7 @@ function zeigeKapitel(nr, frage) {
   }
 
   h += '<div class="mm-kapitel-kopf">' +
-    '<div class="mm-kapitel-nr">' + esc(kapitelMarke(k)) +
+    '<div class="mm-kapitel-nr">' + (k.nr ? 'Kapitel <span style="text-transform:none">' + esc(k.nr) + '</span>' : 'Vorspann') +
     (k.nr ? ' von ' + KAP.filter(x => x.nr).length : '') + '</div>' +
     '<h1>' + markieren(k.titel, begriffe) + '</h1><div class="mm-marken">';
   if (k.ergaenzend) {
@@ -530,7 +548,17 @@ function zeigeKapitel(nr, frage) {
   }
   if (k.seite) h += '<span class="mm-marke-chip mm-marke-chip--hsk">Skript S. ' +
     k.seite + '</span>';
-  h += '</div></div>';
+  h += '</div>';
+  /* Grammatikpunkte des HSK-Prüfungsplans 2025, die das Kapitel behandelt */
+  if (k.codes && k.codes.length) {
+    h += '<details class="mm-codes"><summary>HSK-Prüfungsplan 2025: ' + k.codes.length +
+      (k.codes.length === 1 ? ' Grammatikpunkt' : ' Grammatikpunkte') + '</summary><ul>';
+    for (const c of k.codes) {
+      h += '<li><b>' + esc(c[0]) + '</b> ' + esc(c[2]) + '</li>';
+    }
+    h += '</ul></details>';
+  }
+  h += '</div>';
 
   const uebungen = [];
 
@@ -640,10 +668,11 @@ function route() {
   const h = decodeURIComponent(location.hash.replace(/^#/, ''));
   if (h.indexOf('/kapitel/') === 0) {
     const teile = h.slice(9).split('?');
-    const nr = parseInt(teile[0], 10);
+    const roh = teile[0].trim();
+    const nr = /^\d{1,3}[a-z]?$/i.test(roh) ? nrSchluessel(roh) : -1;
     const frage = teile[1] ? teile[1].replace(/^q=/, '') : '';
     if (frage) feld.value = frage;
-    zeigeKapitel(isNaN(nr) ? -1 : nr, frage);
+    zeigeKapitel(nr, frage);
     if (!frage) window.scrollTo({ top: 0, behavior: 'auto' });
   } else if (h.indexOf('/suche/') === 0) {
     const frage = h.slice(7);
@@ -689,8 +718,8 @@ feld.addEventListener('keydown', function (e) {
     e.preventDefault();
     const wert = feld.value.trim();
     if (!wert) return;
-    if (/^\d{1,3}$/.test(wert) && KAP.some(k => k.nr === +wert)) {
-      feld.blur(); geheZuKapitel(+wert, ''); return;
+    if (/^\d{1,3}[a-z]?$/i.test(wert) && KAP.some(k => k.nr === nrSchluessel(wert))) {
+      feld.blur(); geheZuKapitel(nrSchluessel(wert), ''); return;
     }
     const erg = suche(wert);
     if (erg.length) { feld.blur(); geheZuKapitel(KAP[erg[0].i].nr, wert); }
@@ -729,7 +758,7 @@ document.addEventListener('click', function (e) {
   }
   if (z.hasAttribute('data-heim')) { geheHeim(); return; }
   if (z.hasAttribute('data-kap')) {
-    geheZuKapitel(+z.getAttribute('data-kap'), z.getAttribute('data-frage') || '');
+    geheZuKapitel(nrSchluessel(z.getAttribute('data-kap')), z.getAttribute('data-frage') || '');
     return;
   }
   if (z.hasAttribute('data-frage')) {

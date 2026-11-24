@@ -100,7 +100,12 @@ HSKZ = re.compile(r'^HSK-Stufe/n\s*:\s*\[(.*)\]\s*$')
 RULE = re.compile(r'^[_\-–—\s]{10,}$')
 INTRO = 'Bearbeite die folgenden Fragen/Übungen'
 KEY = 'KEY – KEEP EDUCATING YOURSELF'
-NUMMER = re.compile(r'^Grammatikstruktur\s+Nr\.\s*(\d{1,3})\s*$')
+NUMMER = re.compile(r'^Grammatikstruktur\s+Nr\.\s*(\d{1,3}[a-z]?)\s*$')
+
+
+def nummer(s):
+    """'42' -> 42, '42a' -> '42a' (Buchstaben-Kapitel seit 25.11.2026: 42a-e, 82a-c, 92a-c)."""
+    return int(s) if s.isdigit() else s
 MERKE = re.compile(r'^Merke\s*[!:]?$', re.I)
 
 TASK = re.compile(
@@ -172,9 +177,9 @@ if not kapitel_start:
 for b in blocks[:kapitel_start[0]]:
     if b['kind'] != 'p':
         continue
-    m = re.match(r'^(?:(\d{1,3})\.)?\t?(.+?)\t(\d{1,3})\s*$', b['text'])
+    m = re.match(r'^(?:(\d{1,3}[a-z]?)\.)?\t?(.+?)\t(\d{1,3})\s*$', b['text'])
     if m:
-        TOC[toc_key(m.group(2))] = (int(m.group(1)) if m.group(1) else 0,
+        TOC[toc_key(m.group(2))] = (nummer(m.group(1)) if m.group(1) else 0,
                                     int(m.group(3)))
 
 # --------------------------------------------------------------------------
@@ -249,7 +254,7 @@ for k in range(len(kapitel_start) - 1):
 
         m = NUMMER.match(t)
         if m:
-            nr_skript = int(m.group(1))
+            nr_skript = nummer(m.group(1))
             continue
 
         m = HSKZ.match(t)
@@ -290,7 +295,7 @@ for k in range(len(kapitel_start) - 1):
 
     push(cur)
     if nr_skript is not None and nr != nr_skript:
-        abweichung.append((roh_titel[:50], nr, nr_skript))
+        abweichung.append((roh_titel[:50], nr, nr_skript, len(kapitel)))
 
     kapitel.append({
         'nr': nr, 'titel': titel, 'hsk': hsk, 'ergaenzend': ergaenzend,
@@ -356,16 +361,21 @@ print('Textmarken gesamt:', sum(len(k['bm']) for k in kapitel),
 # und der Vorspann ist eine Begriffserklaerung, keine Struktur. Hier wird nur
 # geprueft, dass der Versatz durchgehend genau 1 betraegt; alles andere waere
 # ein echter Fehler im Skript.
-versatz = sorted(set(b - a for _, a, b in abweichung))
+# Die Zeile „Grammatikstruktur Nr. N" steht VOR dem !!!Titel!!! und landet beim
+# Schneiden am Ende des vorigen Kapitels. Erwartet ist also: Nummer im Block =
+# Nummer des naechsten Kapitels (auch bei Buchstaben-Kapiteln 42a …).
+echt = [(t_, a, b) for t_, a, b, i in abweichung
+        if not (i + 1 < len(kapitel) and kapitel[i + 1]['nr'] == b)]
 if not abweichung:
     print('Nummer im Kapitelkopf: deckungsgleich mit dem Verzeichnis')
-elif versatz == [1]:
-    print('Nummer im Kapitelkopf: um genau 1 hoeher in %d von %d Kapiteln '
-          '(der Vorspann zaehlt dort als Nr. 1) — erwartet, die App folgt '
-          'dem Verzeichnis' % (len(abweichung), len(kapitel)))
+elif not echt:
+    print('Nummer im Kapitelkopf: in %d von %d Kapiteln die des naechsten Kapitels '
+          '(Kopfzeile steht vor dem Titel) — erwartet, die App folgt dem Verzeichnis'
+          % (len(abweichung), len(kapitel)))
 else:
-    print('ACHTUNG Nummerierung uneinheitlich, Versatz:', versatz)
-    for t, a, b in abweichung[:10]:
-        print('   %-50s Verzeichnis %s, Kapitelkopf %s' % (t, a, b))
-folge = [k['nr'] for k in kapitel if k['nr']]
-print('Nummern lueckenlos 1..%d:' % len(folge), folge == list(range(1, len(folge) + 1)))
+    print('ACHTUNG Nummerierung uneinheitlich:')
+    for t_, a, b in echt[:10]:
+        print('   %-50s Verzeichnis %s, Kapitelkopf %s' % (t_, a, b))
+folge = [k['nr'] for k in kapitel if isinstance(k['nr'], int) and k['nr']]
+print('Nummern lueckenlos 1..%d:' % len(folge), folge == list(range(1, len(folge) + 1)),
+      '| Buchstaben-Kapitel:', [k['nr'] for k in kapitel if isinstance(k['nr'], str)])
