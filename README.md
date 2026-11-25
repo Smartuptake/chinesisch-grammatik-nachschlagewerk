@@ -1,4 +1,4 @@
-# Grammatikstrukturen Chinesisch · Jahrgangsstufen 10 – 12
+# Grammatikstrukturen Chinesisch · Sekundarstufen I und II
 
 Das interaktive Nachschlagewerk zum Grammatikskript von
 **Mandarin Maverick – Fast Track Chinese**. 112 Grammatikstrukturen (1–101 und die

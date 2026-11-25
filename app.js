@@ -367,7 +367,7 @@ function zeigeVerzeichnis() {
 
   let h = '<div class="mm-titelzeile">' +
     '<h1>Grammatikstrukturen Chinesisch</h1>' +
-    '<p>Das Nachschlagewerk zum Grammatikskript der Jahrgangsstufen 10 – 12. ' +
+    '<p>Das Nachschlagewerk zum Grammatikskript für die Sekundarstufen I und II. ' +
     zahl + ' Grammatikstrukturen, geordnet nach der HSK-Stufe, auf der sie ' +
     'zuerst verlangt werden (HSK-Prüfungsplan 2025). Oben suchen — nach einem Wort auf Pinyin oder ' +
     'Deutsch, oder gleich mit einem ganzen Satz. ' +
